@@ -70,6 +70,11 @@ C Event limits, topdrawer limits, physics quantities
 	integer*4 armSTOP_successes,armSTOP_trials
         real *8 beam_energy, el_energy, theta_sc!elastic calibration
         real *8 tar_mass, tar_atom_num          !elastic calibration
+        real *8 ebeam_model            !beam energy (GeV) for F1F2IN21
+        real *8 Z_tar                  !target charge for F1F2IN21
+        real *8 Eprime, Q2_model, W2_model, nu_model
+        real *8 F1_model, F2_model
+        real *8 Mp_GeV		
 C Initial and reconstructed track quantities.
 	real*8 dpp_init,dth_init,dph_init,xtar_init,ytar_init,ztar_init
 	real*8 dpp_recon,dth_recon,dph_recon,ztar_recon,ytar_recon
@@ -408,28 +413,42 @@ C Strip off header
 !     Read in flag for 'beam energy(MeV)' to trigger on elastic event if present
       beam_energy=-0.1  !by default do not use elastic event generator
       tar_atom_num=12.  !by default it is carbon
+      ebeam_model=-1.0d0      !default: disable F1F2IN21 unless set
+      Z_tar = 1.0d0           !default: proton
       read (chanin,1001,end=1000,err=1000) str_line
       write(*,*),str_line(1:last_char(str_line))
       iss = rd_real(str_line,beam_energy)
       
 ! Read in flag to use sieve
-	read (chanin,1001,end=1000,err=1000) str_line
-	write(*,*),str_line(1:last_char(str_line))
-	if (.not.rd_int(str_line,tmp_int)) 
+        read (chanin,1001,end=1000,err=1000) str_line
+        write(*,*),str_line(1:last_char(str_line))
+        if (.not.rd_int(str_line,tmp_int)) 
      > stop 'ERROR: use_sieve in setup file!'
-	if (tmp_int.eq.1) then
-	  if (ispec.eq.1) use_sieve=.true.
-	  if (ispec.eq.2) use_sieve=.true.
-	  if (ispec.eq.2) use_front_sieve=.false.
-	endif
+        if (tmp_int.eq.1) then
+          if (ispec.eq.1) use_sieve=.true.
+          if (ispec.eq.2) use_sieve=.true.
+          if (ispec.eq.2) use_front_sieve=.false.
+        endif
 
 !     Read in flag for 'target atomic number (Z+N)' for elastic event if present
       read (chanin,1001,end=1000,err=1000) str_line
       write(*,*),str_line(1:last_char(str_line))
       iss = rd_real(str_line,tar_atom_num)
 
+!     Read in beam energy (GeV) for F1F2IN21 model (optional, <=0 disables call)
+      read (chanin,1001,end=1000,err=1000) str_line
+      write(*,*),str_line(1:last_char(str_line))
+      iss = rd_real(str_line,ebeam_model)
 
- 1000	continue
+!     Read in target charge Z for F1F2IN21 model (optional)
+      read (chanin,1001,end=1000,err=1000) str_line
+      write(*,*),str_line(1:last_char(str_line))
+      iss = rd_real(str_line,Z_tar)
+
+
+ 1000  continue
+      Mp_GeV = 0.93827208d0
+
 
 C Set particle masses.
 	m2 = me2			!default to electron
@@ -599,6 +618,24 @@ C Calculate multiple scattering length of target
 	  endif
 	  th_ev = acos(cos_ev)
 	  sin_ev = sin(th_ev)
+	  
+C Inclusive structure-function model (F1F2IN21) for acceptance weighting
+      if (ebeam_model.gt.0.d0) then
+         Eprime = p_spec*(1.d0 + dpp_s/100.d0)/1000.d0
+         Q2_model = 4.d0*ebeam_model*Eprime*(sin(th_ev/2.d0)**2)
+         nu_model = ebeam_model - Eprime
+         W2_model = Mp_GeV*Mp_GeV + 2.d0*Mp_GeV*nu_model - Q2_model
+         if (Q2_model.gt.0.d0 .and. W2_model.gt.0.d0) then
+            call F1F2IN21(Z_tar,tar_atom_num,Q2_model,W2_model,
+     >           F1_model,F2_model)
+         else
+            F1_model = 0.d0
+            F2_model = 0.d0
+         endif
+      else
+         F1_model = 0.d0
+         F2_model = 0.d0
+      endif
 
 C Case 1 : extended cryo target:
 C Choices: 
