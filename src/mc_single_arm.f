@@ -15,10 +15,10 @@ C-______________________________________________________________________________
 	include 'hbook.inc'
 
 c Vector (real*4) for hut ntuples - needs to match dimension of variables
-	real*8		shms_hut(23)
+	real*8		shms_hut(33)
 	real*8          shms_spec(59)
 
-	real*8          hms_hut(23)
+	real*8          hms_hut(33)
 c
 	real*8 xs_num,ys_num,xc_sieve,yc_sieve
 	real*8 xsfr_num,ysfr_num,xc_frsieve,yc_frsieve
@@ -73,6 +73,7 @@ C Event limits, topdrawer limits, physics quantities
         real *8 ebeam_model            !beam energy (GeV) for F1F2IN21
         real *8 Z_tar                  !target charge for F1F2IN21
         real *8 Eprime, Q2_model, W2_model, nu_model
+        real *8 W_model, xbj_model, theta_model
         real *8 F1_model, F2_model
         real *8 Mp_GeV		
 C Initial and reconstructed track quantities.
@@ -632,7 +633,25 @@ C Inclusive structure-function model (F1F2IN21) for acceptance weighting
             F1_model = 0.d0
             F2_model = 0.d0
          endif
+         theta_model = th_ev*degrad
+         if (W2_model.gt.0.d0) then
+            W_model = sqrt(W2_model)
+         else
+            W_model = -1.d0
+         endif
+         if (nu_model.gt.0.d0) then
+            xbj_model = Q2_model/(2.d0*Mp_GeV*nu_model)
+         else
+            xbj_model = -1.d0
+         endif
       else
+         Eprime = 0.d0
+         Q2_model = -1.d0
+         W2_model = -1.d0
+         nu_model = -1.d0
+         W_model = -1.d0
+         xbj_model = -1.d0
+         theta_model = -1.d0
          F1_model = 0.d0
          F2_model = 0.d0
       endif
@@ -789,6 +808,16 @@ C for spectrometer ntuples
 	       shms_hut(21)= shmsSTOP_id
 	       shms_hut(22)= x
 	       shms_hut(23)= y
+	       shms_hut(24)= ebeam_model
+	       shms_hut(25)= Eprime
+	       shms_hut(26)= Q2_model
+	       shms_hut(27)= W2_model
+	       shms_hut(28)= W_model
+	       shms_hut(29)= nu_model
+	       shms_hut(30)= xbj_model
+	       shms_hut(31)= theta_model
+	       shms_hut(32)= F1_model
+	       shms_hut(33)= F2_model
 	       do ivar=1,NtupleSize
 		  write(NtupleIO) shms_hut(ivar)
 	       enddo
@@ -822,6 +851,16 @@ C for spectrometer ntuples
                hms_hut(21)=hSTOP_id
 	       hms_hut(22)= x
 	       hms_hut(23)= y
+	       hms_hut(24)= ebeam_model
+	       hms_hut(25)= Eprime
+	       hms_hut(26)= Q2_model
+	       hms_hut(27)= W2_model
+	       hms_hut(28)= W_model
+	       hms_hut(29)= nu_model
+	       hms_hut(30)= xbj_model
+	       hms_hut(31)= theta_model
+	       hms_hut(32)= F1_model
+	       hms_hut(33)= F2_model
 	       do ivar=1,NtupleSize
 		  write(NtupleIO) hms_hut(ivar)
 	       enddo
