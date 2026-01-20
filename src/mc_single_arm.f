@@ -663,8 +663,9 @@ C 2. cryotarg2017: Cylinder (1.32 inches radisu)  with curved exit window (same 
 C 3. Tuna can: shaped like a tuna can - 4 cm diameter (usually)  - 5 mil window. 
 	  if (gen_lim(6).gt.3.) then ! anything longer than 3 cm assumed to be cryotarget
 c	    call cryotuna(z,th_ev,rad_len_cm,gen_lim(6),musc_targ_len)
-c	    call cryocylinder(z,th_ev,rad_len_cm,gen_lim(6),musc_targ_len)
-	     call cryotarg2017(z,th_ev,rad_len_cm,gen_lim(6),musc_targ_len)
+c       call cryocylinder(z,th_ev,rad_len_cm,gen_lim(6),musc_targ_len)
+             call he3targ2019(z,th_ev,rad_len_cm, 40.0, musc_targ_len)  !specify 40 cm length all the time	     
+c	     call cryotarg2017(z,th_ev,rad_len_cm,gen_lim(6),musc_targ_len)	    
 C Simple solid target
 	 else
 	    if (gen_lim(6).gt.0) then
