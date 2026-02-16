@@ -622,8 +622,17 @@ C Calculate multiple scattering length of target
 	  
 C Inclusive structure-function model (F1F2IN21) for acceptance weighting
       if (ebeam_model.gt.0.d0) then
-         Eprime = p_spec*(1.d0 + dpp_s/100.d0)/1000.d0
-         Q2_model = 4.d0*ebeam_model*Eprime*(sin(th_ev/2.d0)**2)
+         Eprime = p_spec*(1.d0 + dpp_recon/100.d0)/1000.d0
+	 if(ispec.eq.1) then	! spectrometer on right
+	    theta_model = acos((cos_ts+(dth_recon/1000)*sin_ts)
+     >	               /sqrt(1+(dth_recon/1000)**2
+     >                 +(dph_recon/1000)**2))*degrad	    
+	 elseif(ispec.eq.2) then ! spectrometer on left
+	    theta_model = acos((cos_ts-(dth_recon/1000)*sin_ts)
+     >	               /sqrt(1+(dth_recon/1000)**2
+     >                 +(dph_recon/1000)**2))*degrad	    
+	 endif	 
+         Q2_model = 4.d0*ebeam_model*Eprime*(sin(theta_model/2.d0)**2)
          nu_model = ebeam_model - Eprime
          W2_model = Mp_GeV*Mp_GeV + 2.d0*Mp_GeV*nu_model - Q2_model
          if (Q2_model.gt.0.d0 .and. W2_model.gt.0.d0) then
@@ -633,8 +642,7 @@ C Inclusive structure-function model (F1F2IN21) for acceptance weighting
             F1_model = 0.d0
             F2_model = 0.d0
          endif
-         theta_model = th_ev*degrad
-         if (W2_model.gt.0.d0) then
+	 if (W2_model.gt.0.d0) then
             W_model = sqrt(W2_model)
          else
             W_model = -1.d0
