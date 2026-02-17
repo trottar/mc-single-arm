@@ -632,7 +632,8 @@ C Inclusive structure-function model (F1F2IN21) for acceptance weighting
      >	               /sqrt(1+(dth_recon/1000)**2
      >                 +(dph_recon/1000)**2))*degrad	    
 	 endif	 
-         Q2_model = 4.d0*ebeam_model*Eprime*(sin(theta_model/2.d0)**2)
+         Q2_model = 4.d0*ebeam_model*Eprime
+     >	          *(sin((theta_model/degrad)/2.d0)**2)
          nu_model = ebeam_model - Eprime
          W2_model = Mp_GeV*Mp_GeV + 2.d0*Mp_GeV*nu_model - Q2_model
          if (Q2_model.gt.0.d0 .and. W2_model.gt.0.d0) then
