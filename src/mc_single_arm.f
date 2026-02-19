@@ -15,10 +15,10 @@ C-______________________________________________________________________________
 	include 'hbook.inc'
 
 c Vector (real*4) for hut ntuples - needs to match dimension of variables
-	real*8		shms_hut(33)
+	real*8		shms_hut(37)
 	real*8          shms_spec(59)
 
-	real*8          hms_hut(33)
+	real*8          hms_hut(37)
 c
 	real*8 xs_num,ys_num,xc_sieve,yc_sieve
 	real*8 xsfr_num,ysfr_num,xc_frsieve,yc_frsieve
@@ -75,7 +75,19 @@ C Event limits, topdrawer limits, physics quantities
         real *8 Eprime, Q2_model, W2_model, nu_model
         real *8 W_model, xbj_model, theta_model
         real *8 F1_model, F2_model
-        real *8 Mp_GeV		
+        real *8 Mp_GeV
+
+C --- Added: cross section (optional) absolute rate, analogous to old script ---
+	real*8 p_accept, th_accept, ph_accept
+	real*8 mott_nb, tan2, w1_model, w2_model
+	real*8 sigma_f1f2, sigma_weight, rate_f1f2
+	real*8 th2, p_spec_GeV, targ_len_m
+	real*8 beam_current_uA, target_dens_m3
+	real*8 alpha_em, gev2_to_nb, echarge
+	parameter (alpha_em   = 7.2973525693d-3)      ! fine-structure constant
+	parameter (gev2_to_nb = 3.89379338d5)         ! 1 GeV^-2 = 3.89379338e5 nb
+	parameter (echarge    = 1.602176634d-19)      ! Coulomb
+	
 C Initial and reconstructed track quantities.
 	real*8 dpp_init,dth_init,dph_init,xtar_init,ytar_init,ztar_init
 	real*8 dpp_recon,dth_recon,dph_recon,ztar_recon,ytar_recon
@@ -299,6 +311,11 @@ C Strip off header
 	  gen_lim_up(i) = gen_lim(i)
 	enddo
 
+C Acceptance (constant for the run), analogous to old script
+	p_accept  = (gen_lim_up(1) - gen_lim_down(1))/100.d0     ! dp/p (fraction)
+	th_accept = (gen_lim_up(2) - gen_lim_down(2))/1000.d0    ! rad (from mrad)
+	ph_accept = (gen_lim_up(3) - gen_lim_down(3))/1000.d0    ! rad (from mrad)	
+
 	do i = 4,6
 	  read (chanin,1001) str_line
 	  write(*,*),str_line(1:last_char(str_line))
@@ -416,6 +433,8 @@ C Strip off header
       tar_atom_num=12.  !by default it is carbon
       ebeam_model=-1.0d0      !default: disable F1F2IN21 unless set
       Z_tar = 1.0d0           !default: proton
+      beam_current_uA = 0.d0  !optional (uA); if <=0, absolute rate disabled
+      target_dens_m3  = 0.d0  !optional (#/m^3); if <=0, absolute rate disabled	
       read (chanin,1001,end=1000,err=1000) str_line
       write(*,*),str_line(1:last_char(str_line))
       iss = rd_real(str_line,beam_energy)
@@ -446,6 +465,16 @@ C Strip off header
       write(*,*),str_line(1:last_char(str_line))
       iss = rd_real(str_line,Z_tar)
 
+
+!     Optional: beam current (uA) and target number density (#/m^3)
+!     Add TWO extra lines at end of your setup file if you want absolute rates.
+      read (chanin,1001,end=1000,err=1000) str_line
+      write(*,*),str_line(1:last_char(str_line))
+      iss = rd_real(str_line,beam_current_uA)
+
+      read (chanin,1001,end=1000,err=1000) str_line
+      write(*,*),str_line(1:last_char(str_line))
+      iss = rd_real(str_line,target_dens_m3)	
 
  1000  continue
       Mp_GeV = 0.93827208d0
@@ -624,13 +653,13 @@ C Inclusive structure-function model (F1F2IN21) for acceptance weighting
       if (ebeam_model.gt.0.d0) then
          Eprime = p_spec*(1.d0 + dpp_recon/100.d0)/1000.d0
 	 if(ispec.eq.1) then	! spectrometer on right
-	    theta_model = acos((cos_ts+(dth_recon/1000)*sin_ts)
-     >	               /sqrt(1+(dth_recon/1000)**2
-     >                 +(dph_recon/1000)**2))*degrad	    
+	    theta_model = acos((cos_ts+(dth_recon/1000.d0)*sin_ts)
+     >	               /sqrt(1+(dth_recon/1000.d0)**2
+     >                 +(dph_recon/1000.d0)**2))*degrad	    
 	 elseif(ispec.eq.2) then ! spectrometer on left
-	    theta_model = acos((cos_ts-(dth_recon/1000)*sin_ts)
-     >	               /sqrt(1+(dth_recon/1000)**2
-     >                 +(dph_recon/1000)**2))*degrad	    
+	    theta_model = acos((cos_ts-(dth_recon/1000.d0)*sin_ts)
+     >	               /sqrt(1+(dth_recon/1000.d0)**2
+     >                 +(dph_recon/1000.d0)**2))*degrad	    
 	 endif	 
          Q2_model = 4.d0*ebeam_model*Eprime
      >	          *(sin((theta_model/degrad)/2.d0)**2)
@@ -643,6 +672,57 @@ C Inclusive structure-function model (F1F2IN21) for acceptance weighting
             F1_model = 0.d0
             F2_model = 0.d0
          endif
+	 
+
+C --- Cross section and (optional) absolute rate (analogous to old block) ---
+       mott_nb      = 0.d0
+       sigma_f1f2   = 0.d0
+       sigma_weight = 0.d0
+       rate_f1f2    = 0.d0
+
+       if (ebeam_model.gt.0.d0 .and. Q2_model.gt.0.d0 .and.
+     >     nu_model.gt.0.d0 .and. theta_model.gt.0.d0) then
+
+          if (xbj_model.gt.0.99d0) then
+             sigma_f1f2   = 0.d0
+             sigma_weight = 0.d0
+             rate_f1f2    = 0.d0
+          else
+             th2  = (theta_model/degrad)/2.d0
+             tan2 = tan(th2)**2
+
+C Mott in nb/sr (GeV^-2 converted to nb via gev2_to_nb)
+             mott_nb = ((alpha_em*cos(th2)/
+     >           (2.d0*ebeam_model*sin(th2)*sin(th2)))**2)*gev2_to_nb
+
+             w1_model    = F1_model/Mp_GeV
+             w2_model    = F2_model/nu_model
+             sigma_f1f2  = mott_nb*(w2_model  2.d0*w1_model*tan2)
+
+C Integrate over generated phase space (dp * dtheta * dphi), old-style
+C p_spec is MeV/c in this code path; convert to GeV for consistency
+             p_spec_GeV   = p_spec/1000.d0
+             sigma_weight = sigma_f1f2*p_spec_GeV*p_accept*
+     >                      th_accept*ph_accept
+
+C Optional absolute rate (Hz): requires target_dens_m3 and beam_current_uA
+             if (beam_current_uA.gt.0.d0 .and. target_dens_m3.gt.0.d0
+     >           .and. gen_lim(6).ne.0.d0) then
+                targ_len_m = abs(gen_lim(6))/100.d0
+                rate_f1f2 = sigma_weight * target_dens_m3 * 1.d-37
+     >                     * (beam_current_uA*1.d-6)
+     >                     * targ_len_m / (echarge*n_trials)
+             endif
+          endif
+       endif
+
+       if ((Itrial.le.50).or.(mod(Itrial,500).lt.10)) then
+          write(*,'("trial #",i8," xsec(nb)=",G14.5,
+     >      " weight=",G14.5," rate(Hz)=",G14.5," at x,Q2=",2F8.4)')
+     >      Itrial, sigma_f1f2, sigma_weight, rate_f1f2,
+     >      xbj_model, Q2_model
+       endif
+	
 	 if (W2_model.gt.0.d0) then
             W_model = sqrt(W2_model)
          else
@@ -828,7 +908,11 @@ C for spectrometer ntuples
 	       shms_hut(31)= theta_model
 	       shms_hut(32)= F1_model
 	       shms_hut(33)= F2_model
-	       do ivar=1,NtupleSize
+ 	       shms_hut(34)= mott_nb
+ 	       shms_hut(35)= sigma_f1f2
+ 	       shms_hut(36)= sigma_weight
+ 	       shms_hut(37)= rate_f1f2
+ 	       do ivar=1,37
 		  write(NtupleIO) shms_hut(ivar)
 	       enddo
 	    endif
@@ -871,7 +955,11 @@ C for spectrometer ntuples
 	       hms_hut(31)= theta_model
 	       hms_hut(32)= F1_model
 	       hms_hut(33)= F2_model
-	       do ivar=1,NtupleSize
+ 	       hms_hut(34)= mott_nb
+ 	       hms_hut(35)= sigma_f1f2
+ 	       hms_hut(36)= sigma_weight
+ 	       hms_hut(37)= rate_f1f2
+ 	       do ivar=1,37
 		  write(NtupleIO) hms_hut(ivar)
 	       enddo
 	    endif
