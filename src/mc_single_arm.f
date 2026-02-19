@@ -694,7 +694,6 @@ C --- Cross section and (optional) absolute rate (analogous to old block) ---
 C Mott in nb/sr (GeV^-2 converted to nb via gev2_to_nb)
              mott_nb = ((alpha_em*cos(th2)/
      >           (2.d0*ebeam_model*sin(th2)*sin(th2)))**2)*gev2_to_nb
-
 	             w1_model      = F1_model/Mp_GeV
 	             w2_inel_model = F2_model/nu_model
 	             sigma_f1f2    = mott_nb*(w2_inel_model
