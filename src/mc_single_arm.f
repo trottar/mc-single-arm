@@ -79,7 +79,7 @@ C Event limits, topdrawer limits, physics quantities
 
 C --- Added: cross section (optional) absolute rate, analogous to old script ---
 	real*8 p_accept, th_accept, ph_accept
-	real*8 mott_nb, tan2, w1_model, w2_model
+	real*8 mott_nb, tan2, w1_model, w2_inel_model
 	real*8 sigma_f1f2, sigma_weight, rate_f1f2
 	real*8 th2, p_spec_GeV, targ_len_m
 	real*8 beam_current_uA, target_dens_m3
@@ -649,101 +649,20 @@ C Calculate multiple scattering length of target
 	  th_ev = acos(cos_ev)
 	  sin_ev = sin(th_ev)
 	  
-C Inclusive structure-function model (F1F2IN21) for acceptance weighting
-      if (ebeam_model.gt.0.d0) then
-         Eprime = p_spec*(1.d0 + dpp_recon/100.d0)/1000.d0
-	 if(ispec.eq.1) then	! spectrometer on right
-	    theta_model = acos((cos_ts+(dth_recon/1000.d0)*sin_ts)
-     >	               /sqrt(1+(dth_recon/1000.d0)**2
-     >                 +(dph_recon/1000.d0)**2))*degrad	    
-	 elseif(ispec.eq.2) then ! spectrometer on left
-	    theta_model = acos((cos_ts-(dth_recon/1000.d0)*sin_ts)
-     >	               /sqrt(1+(dth_recon/1000.d0)**2
-     >                 +(dph_recon/1000.d0)**2))*degrad	    
-	 endif	 
-         Q2_model = 4.d0*ebeam_model*Eprime
-     >	          *(sin((theta_model/degrad)/2.d0)**2)
-         nu_model = ebeam_model - Eprime
-         W2_model = Mp_GeV*Mp_GeV + 2.d0*Mp_GeV*nu_model - Q2_model
-         if (Q2_model.gt.0.d0 .and. W2_model.gt.0.d0) then
-            call F1F2IN21(Z_tar,tar_atom_num,Q2_model,W2_model,
-     >           F1_model,F2_model)
-         else
-            F1_model = 0.d0
-            F2_model = 0.d0
-         endif
-	 
-
-C --- Cross section and (optional) absolute rate (analogous to old block) ---
-       mott_nb      = 0.d0
-       sigma_f1f2   = 0.d0
-       sigma_weight = 0.d0
-       rate_f1f2    = 0.d0
-
-       if (ebeam_model.gt.0.d0 .and. Q2_model.gt.0.d0 .and.
-     >     nu_model.gt.0.d0 .and. theta_model.gt.0.d0) then
-
-          if (xbj_model.gt.0.99d0) then
-             sigma_f1f2   = 0.d0
-             sigma_weight = 0.d0
-             rate_f1f2    = 0.d0
-          else
-             th2  = (theta_model/degrad)/2.d0
-             tan2 = tan(th2)**2
-
-C Mott in nb/sr (GeV^-2 converted to nb via gev2_to_nb)
-             mott_nb = ((alpha_em*cos(th2)/
-     >           (2.d0*ebeam_model*sin(th2)*sin(th2)))**2)*gev2_to_nb
-
-             w1_model    = F1_model/Mp_GeV
-             w2_model    = F2_model/nu_model
-             sigma_f1f2  = mott_nb*(w2_model  2.d0*w1_model*tan2)
-
-C Integrate over generated phase space (dp * dtheta * dphi), old-style
-C p_spec is MeV/c in this code path; convert to GeV for consistency
-             p_spec_GeV   = p_spec/1000.d0
-             sigma_weight = sigma_f1f2*p_spec_GeV*p_accept*
-     >                      th_accept*ph_accept
-
-C Optional absolute rate (Hz): requires target_dens_m3 and beam_current_uA
-             if (beam_current_uA.gt.0.d0 .and. target_dens_m3.gt.0.d0
-     >           .and. gen_lim(6).ne.0.d0) then
-                targ_len_m = abs(gen_lim(6))/100.d0
-                rate_f1f2 = sigma_weight * target_dens_m3 * 1.d-37
-     >                     * (beam_current_uA*1.d-6)
-     >                     * targ_len_m / (echarge*n_trials)
-             endif
-          endif
-       endif
-
-       if ((Itrial.le.50).or.(mod(Itrial,500).lt.10)) then
-          write(*,'("trial #",i8," xsec(nb)=",G14.5,
-     >      " weight=",G14.5," rate(Hz)=",G14.5," at x,Q2=",2F8.4)')
-     >      Itrial, sigma_f1f2, sigma_weight, rate_f1f2,
-     >      xbj_model, Q2_model
-       endif
-	
-	 if (W2_model.gt.0.d0) then
-            W_model = sqrt(W2_model)
-         else
-            W_model = -1.d0
-         endif
-         if (nu_model.gt.0.d0) then
-            xbj_model = Q2_model/(2.d0*Mp_GeV*nu_model)
-         else
-            xbj_model = -1.d0
-         endif
-      else
-         Eprime = 0.d0
-         Q2_model = -1.d0
-         W2_model = -1.d0
-         nu_model = -1.d0
-         W_model = -1.d0
-         xbj_model = -1.d0
-         theta_model = -1.d0
-         F1_model = 0.d0
-         F2_model = 0.d0
-      endif
+C Initialize F1F2IN21-derived quantities for this event
+      Eprime       = 0.d0
+      Q2_model     = -1.d0
+      W2_model     = -1.d0
+      nu_model     = -1.d0
+      W_model      = -1.d0
+      xbj_model    = -1.d0
+      theta_model  = -1.d0
+      F1_model     = 0.d0
+      F2_model     = 0.d0
+      mott_nb      = 0.d0
+      sigma_f1f2   = 0.d0
+      sigma_weight = 0.d0
+      rate_f1f2    = 0.d0
 
 C Case 1 : extended cryo target:
 C Choices: 
@@ -848,6 +767,75 @@ c            if (ok_spec) spec(58) =1.
 	    dph_recon = dxdz_s*1000.			!mr
 	    ztar_recon = + y_s / sin_ts 
             ytar_recon = y_s
+
+C Inclusive structure-function model (F1F2IN21) for acceptance weighting
+            if (ebeam_model.gt.0.d0) then
+               Eprime = p_spec*(1.d0 + dpp_recon/100.d0)/1000.d0
+               if(ispec.eq.1) then	! spectrometer on right
+                  theta_model = acos((cos_ts+(dth_recon/1000.d0)*sin_ts)
+     >	               /sqrt(1+(dth_recon/1000.d0)**2
+     >                 +(dph_recon/1000.d0)**2))*degrad
+               elseif(ispec.eq.2) then ! spectrometer on left
+                  theta_model = acos((cos_ts-(dth_recon/1000.d0)*sin_ts)
+     >	               /sqrt(1+(dth_recon/1000.d0)**2
+     >                 +(dph_recon/1000.d0)**2))*degrad
+               endif
+               Q2_model = 4.d0*ebeam_model*Eprime
+     >	          *(sin((theta_model/degrad)/2.d0)**2)
+               nu_model = ebeam_model - Eprime
+               W2_model = Mp_GeV*Mp_GeV + 2.d0*Mp_GeV*nu_model - Q2_model
+
+               if (W2_model.gt.0.d0) then
+                  W_model = sqrt(W2_model)
+               endif
+               if (nu_model.gt.0.d0) then
+                  xbj_model = Q2_model/(2.d0*Mp_GeV*nu_model)
+               endif
+
+               if (Q2_model.gt.0.d0 .and. W2_model.gt.0.d0) then
+                  call F1F2IN21(Z_tar,tar_atom_num,Q2_model,W2_model,
+     >                 F1_model,F2_model)
+
+                  if (nu_model.gt.0.d0 .and. theta_model.gt.0.d0
+     >                .and. xbj_model.le.0.99d0) then
+                     th2  = (theta_model/degrad)/2.d0
+                     tan2 = tan(th2)**2
+
+C Mott in nb/sr (GeV^-2 converted to nb via gev2_to_nb)
+                     mott_nb = ((alpha_em*cos(th2)/
+     >                 (2.d0*ebeam_model*sin(th2)*sin(th2)))**2)*
+     >                 gev2_to_nb
+
+                     w1_model      = F1_model/Mp_GeV
+                     w2_inel_model = F2_model/nu_model
+                     sigma_f1f2    = mott_nb*(w2_inel_model
+     >                                + 2.d0*w1_model*tan2)
+
+C Integrate over generated phase space (dp * dtheta * dphi), old-style
+C p_spec is MeV/c in this code path; convert to GeV for consistency
+                     p_spec_GeV   = p_spec/1000.d0
+                     sigma_weight = sigma_f1f2*p_spec_GeV*p_accept*
+     >                            th_accept*ph_accept
+
+C Optional absolute rate (Hz): requires target_dens_m3 and beam_current_uA
+                     if (beam_current_uA.gt.0.d0 .and.
+     >                   target_dens_m3.gt.0.d0 .and.
+     >                   gen_lim(6).ne.0.d0) then
+                        targ_len_m = abs(gen_lim(6))/100.d0
+                        rate_f1f2 = sigma_weight * target_dens_m3 * 1.d-37
+     >                           * (beam_current_uA*1.d-6)
+     >                           * targ_len_m / (echarge*n_trials)
+                     endif
+                  endif
+               endif
+            endif
+
+            if ((Itrial.le.50).or.(mod(Itrial,500).lt.10)) then
+               write(*,'("trial #",i8," xsec(nb)=",G14.5,
+     >         " weight=",G14.5," rate(Hz)=",G14.5," at x,Q2=",2F8.4)')
+     >         Itrial, sigma_f1f2, sigma_weight, rate_f1f2,
+     >         xbj_model, Q2_model
+            endif
 
 C Compute sums for calculating reconstruction variances.
 	    dpp_var(1) = dpp_var(1) + (dpp_recon - dpp_init)
