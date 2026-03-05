@@ -438,7 +438,8 @@ C Acceptance (constant for the run), analogous to old script
       read (chanin,1001,end=1000,err=1000) str_line
       write(*,*),str_line(1:last_char(str_line))
       iss = rd_real(str_line,beam_energy)
-      
+
+	
 ! Read in flag to use sieve
         read (chanin,1001,end=1000,err=1000) str_line
         write(*,*),str_line(1:last_char(str_line))
@@ -479,6 +480,16 @@ C Acceptance (constant for the run), analogous to old script
  1000  continue
       Mp_GeV = 0.93827208d0
 
+
+	print *, 'ebeam_model=', ebeam_model
+	print *, 'beam_energy=', beam_energy
+	print *, 'Z_tar=', Z_tar
+	print *, 'tar_atom_num=', tar_atom_num
+	print *, 'beam_current_uA=', beam_current_uA
+	print *, 'target_dens_m3=', target_dens_m3
+C	pause
+
+	
 
 C Set particle masses.
 	m2 = me2			!default to electron
@@ -651,15 +662,15 @@ C Calculate multiple scattering length of target
 	  
 C Inclusive structure-function model (F1F2IN21) for acceptance weighting
       if (ebeam_model.gt.0.d0) then
-         Eprime = p_spec*(1.d0 + dpp_recon/100.d0)/1000.d0
+         Eprime = p_spec*(1.d0 + dpp_init/100.d0)/1000.d0
 	 if(ispec.eq.1) then	! spectrometer on right
-	    theta_model = acos((cos_ts+(dth_recon/1000.d0)*sin_ts)
-     >	               /sqrt(1+(dth_recon/1000.d0)**2
-     >                 +(dph_recon/1000.d0)**2))*degrad	    
+	    theta_model = acos((cos_ts+(dth_init/1000.d0)*sin_ts)
+     >	               /sqrt(1+(dth_init/1000.d0)**2
+     >                 +(dph_init/1000.d0)**2))*degrad	    
 	 elseif(ispec.eq.2) then ! spectrometer on left
-	    theta_model = acos((cos_ts-(dth_recon/1000.d0)*sin_ts)
-     >	               /sqrt(1+(dth_recon/1000.d0)**2
-     >                 +(dph_recon/1000.d0)**2))*degrad	    
+	    theta_model = acos((cos_ts-(dth_init/1000.d0)*sin_ts)
+     >	               /sqrt(1+(dth_init/1000.d0)**2
+     >                 +(dph_init/1000.d0)**2))*degrad	    
 	 endif	 
          Q2_model = 4.d0*ebeam_model*Eprime
      >	          *(sin((theta_model/degrad)/2.d0)**2)
@@ -845,8 +856,16 @@ c            if (ok_spec) spec(58) =1.
 	  if (ok_spec) then !Success, increment arrays
 	    dpp_recon = dpp_s
             dth_recon = dydz_s*1000.			!mr
-	    dph_recon = dxdz_s*1000.			!mr
-	    ztar_recon = + y_s / sin_ts 
+	    dph_recon = dxdz_s*1000. !mr
+C       RLT: To keep RHCS consistency with HCANA, SHMS ztar must pick up minus sign	    
+	    if(ispec.eq.2) then
+	       ztar_recon = - y_s / sin_ts ! Flipped +ztar->-ztar to keep RHCS
+	    elseif(ispec.eq.1) then
+	       ztar_recon = + y_s / sin_ts ! Keep +ztar to keep RHCS (y_s->-y_s for HMS)
+	    else
+	       write(6,*) 'Unknown spectrometer! Stopping..'
+	       stop
+	    endif
             ytar_recon = y_s
 
 C Compute sums for calculating reconstruction variances.
