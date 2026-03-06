@@ -473,13 +473,28 @@ C Acceptance (constant for the run), analogous to old script
 
 !     Optional: beam current (uA) and target number density (#/m^3)
 !     Add TWO extra lines at end of your setup file if you want absolute rates.
+!
+!     Backward compatibility note:
+!     some setup files still carry two legacy lines after Z_tar
+!     ("Multiple scattering type" and "Enegy Loss"). If present,
+!     skip them before reading luminosity inputs.
       read (chanin,1001,end=1000,err=1000) str_line
       write(*,*),str_line(1:last_char(str_line))
+      if (index(str_line,'Multiple scattering type').gt.0 .or.
+     >    index(str_line,'Enegy Loss').gt.0) then
+        read (chanin,1001,end=1000,err=1000) str_line
+        write(*,*),str_line(1:last_char(str_line))
+
+        read (chanin,1001,end=1000,err=1000) str_line
+        write(*,*),str_line(1:last_char(str_line))
+      endif
       iss = rd_real(str_line,beam_current_uA)
 
-      read (chanin,1001,end=1000,err=1000) str_line
-      write(*,*),str_line(1:last_char(str_line))
-      iss = rd_real(str_line,target_dens_m3)	
+      if (iss) then
+        read (chanin,1001,end=1000,err=1000) str_line
+        write(*,*),str_line(1:last_char(str_line))
+        iss = rd_real(str_line,target_dens_m3)
+      endif
 
  1000  continue
       Mp_GeV = 0.93827208d0
