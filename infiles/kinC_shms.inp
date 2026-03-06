@@ -20,7 +20,7 @@
      100.0      Theta reconstruction cut (half width in mr)
      100.0      Phi   reconstruction cut (half width in mr)
      100.0      ZTGT  reconstruction cut (Half width in cm)
-     58696.0    one radiation length of target material (in cm), BigBrother
+     44947.0    one radiation length of target material (in cm), BigBrother
      0.0        Beam x offset (cm)  +x = beam left
      0.0        Beam y offset (cm)  +y = up
      0.0        Target z offset (cm)+z = downstream

@@ -82,6 +82,7 @@ C --- Added: cross section (optional) absolute rate, analogous to old script ---
 	real*8 mott_nb, tan2, w1_model, w2_inel_model
 	real*8 sigma_f1f2, sigma_weight, rate_f1f2
 	real*8 th2, p_spec_GeV, targ_len_m
+	real*8 flux_e_s, n_areal_m2, lumi_m2s
 	real*8 beam_current_uA, target_dens_m3
 	real*8 alpha_em, gev2_to_nb, echarge
 	parameter (alpha_em   = 7.2973525693d-3)      ! fine-structure constant
@@ -435,6 +436,9 @@ C Acceptance (constant for the run), analogous to old script
       Z_tar = 1.0d0           !default: proton
       beam_current_uA = 0.d0  !optional (uA); if <=0, absolute rate disabled
       target_dens_m3  = 0.d0  !optional (#/m^3); if <=0, absolute rate disabled	
+      flux_e_s = 0.d0
+      n_areal_m2 = 0.d0
+      lumi_m2s = 0.d0
       read (chanin,1001,end=1000,err=1000) str_line
       write(*,*),str_line(1:last_char(str_line))
       iss = rd_real(str_line,beam_energy)
@@ -719,7 +723,14 @@ C p_spec is MeV/c in this code path; convert to GeV for consistency
 C Optional absolute rate (Hz): requires target_dens_m3 and beam_current_uA
              if (beam_current_uA.gt.0.d0 .and. target_dens_m3.gt.0.d0
      >           .and. gen_lim(6).ne.0.d0) then
-                targ_len_m = abs(gen_lim(6))/100.d0
+C       --- after sigma_weight is computed (still in nb * phase-space) ---
+		targ_len_m = abs(gen_lim(6))/100.d0 ! cm -> m
+		flux_e_s   = (beam_current_uA*1.d-6)/echarge ! A / C = 1/s (e-/s)
+		n_areal_m2 = target_dens_m3 * targ_len_m ! (#/m^3)*m = #/m^2
+		lumi_m2s   = flux_e_s * n_areal_m2 ! 1/(m^2*s)
+
+C       convert nb -> m^2 and normalize by trials -> Hz contribution
+		sigma_weight = sigma_weight * 1.d-37 * lumi_m2s / n_trials		
                 rate_f1f2 = sigma_weight * target_dens_m3 * 1.d-37
      >                     * (beam_current_uA*1.d-6)
      >                     * targ_len_m / (echarge*n_trials)
