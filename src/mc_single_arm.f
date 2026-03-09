@@ -81,13 +81,27 @@ C --- Added: cross section (optional) absolute rate, analogous to old script ---
 	real*8 p_accept, th_accept, ph_accept
 	real*8 mott_nb, tan2, w1_model, w2_inel_model
 	real*8 sigma_f1f2, sigma_weight, rate_f1f2
-	real*8 th2, p_spec_GeV, targ_len_m
-	real*8 flux_e_s, n_areal_m2, lumi_m2s
+	real*8 th2, p_spec_GeV, targ_len_m, jac_ep
+	real*8 n_areal_m2, lumi_per_C
 	real*8 beam_current_uA, target_dens_m3
-	real*8 alpha_em, gev2_to_nb, echarge
+	real*8 alpha_em, gev2_to_nb, nb_to_m2
+	real*8 echarge, echarge_uC
+	
+C=======================================================================
+C New variable declarations for inclusive-model phase-space weighting
+C=======================================================================
+	double precision p0_GeV	! Central spectrometer momentum [GeV/c]
+	double precision pprime_GeV ! Event scattered momentum p' [GeV/c]
+	double precision jac_E_delta ! dE'/d(delta), delta fractional
+	double precision jac_xpy ! dOmega/(dxptar dyptar)
+	double precision ddelta_width ! Full generated width in delta
+	double precision dxptar_width ! Full generated width in xptar [rad]
+	double precision dyptar_width ! Full generated width in yptar [rad]
+	
 	parameter (alpha_em   = 7.2973525693d-3)      ! fine-structure constant
-	parameter (gev2_to_nb = 3.89379338d5)         ! 1 GeV^-2 = 3.89379338e5 nb
-	parameter (echarge    = 1.602176634d-19)      ! Coulomb
+	parameter (gev2_to_nb = 3.89379338d5) ! 1 GeV^-2 = 3.89379338e5 nb
+	parameter (nb_to_m2 = 1.0d-37) ! 1 GeV^-2 = 3.89379338e5 nb
+	parameter (echarge    = 1.602176634d-19) ! Coulomb
 	
 C Initial and reconstructed track quantities.
 	real*8 dpp_init,dth_init,dph_init,xtar_init,ytar_init,ztar_init
@@ -436,9 +450,21 @@ C Acceptance (constant for the run), analogous to old script
       Z_tar = 1.0d0           !default: proton
       beam_current_uA = 0.d0  !optional (uA); if <=0, absolute rate disabled
       target_dens_m3  = 0.d0  !optional (#/m^3); if <=0, absolute rate disabled	
-      flux_e_s = 0.d0
       n_areal_m2 = 0.d0
-      lumi_m2s = 0.d0
+      lumi_per_C = 0.d0
+      echarge_uC = echarge * 1.0d6 ! uC
+
+C=======================================================================
+C Initialization
+C=======================================================================
+      p0_GeV       = 0.d0
+      pprime_GeV   = 0.d0
+      jac_E_delta  = 0.d0
+      jac_xpy      = 0.d0
+      ddelta_width = 0.d0
+      dxptar_width = 0.d0
+      dyptar_width = 0.d0
+	
       read (chanin,1001,end=1000,err=1000) str_line
       write(*,*),str_line(1:last_char(str_line))
       iss = rd_real(str_line,beam_energy)
@@ -545,7 +571,7 @@ C DJG - If you want to use default (fixed) seed, comment out the line below
 	   elseif(ispec.eq.2) then
 	      armSTOP_successes=shmsSTOP_successes
 	   endif
-	  if(mod(Itrial,5000).eq.0) write(*,*)'event #: ',
+	  if(mod(Itrial,200000).eq.0) write(*,*)'event #: ',
      >Itrial,'       successes: ',armSTOP_successes
 
 
@@ -729,31 +755,60 @@ C Mott in nb/sr (GeV^-2 converted to nb via gev2_to_nb)
 	             sigma_f1f2    = mott_nb*(w2_inel_model
      >                             + 2.d0*w1_model*tan2)
 
-C Integrate over generated phase space (dp * dtheta * dphi), old-style
-C p_spec is MeV/c in this code path; convert to GeV for consistency
-             p_spec_GeV   = p_spec/1000.d0
-             sigma_weight = sigma_f1f2*p_spec_GeV*p_accept*
-     >                      th_accept*ph_accept
+C=======================================================================
+C Weight for generation in (delta, xptar, yptar)
+C
+C Assumptions:
+C   sigma_f1f2 = d^2sigma / (dOmega dE')   [nb / sr / GeV]
+C   dpp_init   = fractional delta = (p-p0)/p0
+C   xptar_init = generated xptar [rad]
+C   yptar_init = generated yptar [rad]
+C   Eprime     already defined correctly earlier
+C=======================================================================
+		     p0_GeV     = p_spec/1000.d0
+		     pprime_GeV = p0_GeV*(1.d0 + dpp_init/100.d0)
 
-C Optional absolute rate (Hz): requires target_dens_m3 and beam_current_uA
+C dE'/d(delta) with delta fractional
+		     jac_E_delta = (pprime_GeV/Eprime) * p0_GeV
+
+C Exact solid-angle Jacobian for target slopes
+		     jac_xpy = 1.d0 /
+     >                         ((1.d0 
+     >                         + (dth_init/1000.d0)*(dth_init/1000.d0)
+     >                         + (dph_init/1000.d0)*(dph_init/1000.d0)
+     >                         )**1.5d0)
+
+C       Use the FULL generated widths here.
+C If the generator throws from [-lim,+lim], then full width = 2*lim.
+		     ddelta_width = p_accept
+		     dxptar_width = th_accept
+		     dyptar_width = ph_accept
+
+C Per-trial cross section weight in nb
+		     sigma_weight = sigma_f1f2 *
+     >                              jac_E_delta *
+     >                              jac_xpy *
+     >                              ddelta_width *
+     >                              dxptar_width * dyptar_width /
+     >                              n_trials
+C       Optional absolute rate (Hz): requires target_dens_m3 and beam_current_uA
              if (beam_current_uA.gt.0.d0 .and. target_dens_m3.gt.0.d0
      >           .and. gen_lim(6).ne.0.d0) then
 C       --- after sigma_weight is computed (still in nb * phase-space) ---
 		targ_len_m = abs(gen_lim(6))/100.d0 ! cm -> m
-		flux_e_s   = (beam_current_uA*1.d-6)/echarge ! A / C = 1/s (e-/s)
 		n_areal_m2 = target_dens_m3 * targ_len_m ! (#/m^3)*m = #/m^2
-		lumi_m2s   = flux_e_s * n_areal_m2 ! 1/(m^2*s)
+		lumi_per_C   = n_areal_m2 / echarge_uC ! 1/(m^2*uC)
 
-C       convert nb -> m^2 and normalize by trials -> Hz contribution
-		sigma_weight = sigma_weight * 1.d-37 * lumi_m2s / n_trials		
-                rate_f1f2 = sigma_weight * target_dens_m3 * 1.d-37
+C       convert nb -> m^2 and normalize by charge contribution
+		sigma_weight = sigma_weight * nb_to_m2 * lumi_per_C
+		rate_f1f2 = sigma_weight * target_dens_m3 * nb_to_m2
      >                     * (beam_current_uA*1.d-6)
-     >                     * targ_len_m / (echarge*n_trials)
+     >                     * targ_len_m / (echarge)
              endif
           endif
        endif
 
-       if ((Itrial.le.50).or.(mod(Itrial,500).lt.10)) then
+       if ((Itrial.le.1).or.(mod(Itrial,50000).le.3)) then
           write(*,'("trial #",i8," xsec(nb)=",G14.5,
      >      " weight=",G14.5," rate(Hz)=",G14.5," at x,Q2=",2F8.4)')
      >      Itrial, sigma_f1f2, sigma_weight, rate_f1f2,

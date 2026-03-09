@@ -1,7 +1,7 @@
 !------------------------------------------------------------------------------
 ! Input file for MC_SINGLE_ARM
 !------------------------------------------------------------------------------
-   2000000      Monte-Carlo trials
+   2000000	Monte-Carlo trials
       1         Spectrometer (1=HMS, 2=SHMS, 3=..)
      2900.      Spectrometer momentum (in MeV/c)
      30.0       Spectrometer angle (in degrees)
@@ -20,7 +20,7 @@
      100.0      Theta reconstruction cut (half width in mr)
      100.0      Phi   reconstruction cut (half width in mr)
      100.0      ZTGT  reconstruction cut (Half width in cm)
-     58696.0    one radiation length of target material (in cm), BigBrother
+     44947.0    one radiation length of target material (in cm), BigBrother
      0.0        Beam x offset (cm)  +x = beam left
      0.0        Beam y offset (cm)  +y = up
      0.0        Target z offset (cm)+z = downstream
@@ -40,3 +40,5 @@
      2          target charge Z (for F1F2IN21)     
      0          Multiple scattering type (1= Highland, 0=Highland w tail)
      1          Enegy Loss (1=On)
+   30000.0      Beam current (uA) for luminosity weight (30 mA)
+ 3.48E26      3He target number density (#/m^3)
