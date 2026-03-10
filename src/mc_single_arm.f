@@ -111,6 +111,10 @@ C Initial and reconstructed track quantities.
 	real*8 p_spec,th_spec			!spectrometer setting
 	real*8 resmult
 
+C Circular raster
+	double precision urad, uphi, rr, phi
+	real*8 ax_raster, ay_raster	
+
 C Control flags (from input file)
 	integer*4 ispec
 	integer*4 p_flag			!particle identification
@@ -611,18 +615,72 @@ C Units are cm.
 
           endif
 C DJG Assume flat raster
-	  fr1 = (grnd() - 0.5) * gen_lim(7)   !raster x
-	  fr2 = (grnd() - 0.5) * gen_lim(8)   !raster y
+c	  fr1 = (grnd() - 0.5) * gen_lim(7)   !raster x
+c	  fr2 = (grnd() - 0.5) * gen_lim(8)   !raster y
 
-	  fry = -fr2  !+y = up, but fry needs to be positive when pointing down
+c	  fry = -fr2  !+y = up, but fry needs to be positive when pointing down
 
+c	  x = x + fr1
+c	  y = y + fr2
+
+c	  x = x + xoff
+c	  y = y + yoff
+c	  z = z + zoff
+
+c=======================================================================
+c Generate raster offset as a UNIFORM FILLED DISK / ELLIPSE
+c
+c Old code:
+c   fr1 = (grnd()-0.5d0) * gen_lim(7)
+c   fr2 = (grnd()-0.5d0) * gen_lim(8)
+c
+c That produces a UNIFORM SQUARE / RECTANGLE in (x,y), not a circular
+c raster. The replacement below generates points uniformly in area inside
+c a unit disk, then scales them to the requested raster full widths.
+c
+c Input convention is preserved:
+c   gen_lim(7) = raster full width in x  (cm)
+c   gen_lim(8) = raster full width in y  (cm)
+c
+c For equal widths:
+c   radius = gen_lim(7)/2 = gen_lim(8)/2
+c   --> uniform circular raster
+c
+c For unequal widths:
+c   semi-axis x = gen_lim(7)/2
+c   semi-axis y = gen_lim(8)/2
+c   --> uniform elliptical raster
+c
+c IMPORTANT:
+c   The factor sqrt(rnd) is required for UNIFORM AREA density.
+c   Using r = rnd would overpopulate the center.
+c=======================================================================
+
+c----- Semi-axes of the raster footprint (cm)
+	  ax_raster = 0.5d0 * gen_lim(7)
+	  ay_raster = 0.5d0 * gen_lim(8)
+
+c----- Draw two independent random numbers in [0,1)
+	  urad = grnd()
+	  uphi = grnd()
+
+c----- Convert to polar coordinates for uniform area in a disk:
+c      rr  in [0,1] with p(rr) = 2*rr  --> rr = sqrt(U)
+c      phi in [0,2*pi)
+	  rr  = dsqrt(urad)
+	  phi = twopi * uphi
+
+c----- Scale unit disk point to requested raster size
+	  fr1 = ax_raster * rr * dcos(phi)
+	  fr2 = ay_raster * rr * dsin(phi)
+
+c----- Historical sign convention used elsewhere in the code
+	  fry = -fr2
+
+c----- Apply raster offsets to beam position at the target
 	  x = x + fr1
 	  y = y + fr2
-
-	  x = x + xoff
-	  y = y + yoff
-	  z = z + zoff
-
+	  
 C Pick scattering angles and DPP from independent, uniform distributions.
 C dxdz and dydz in HMS TRANSPORT coordinates.
 
@@ -721,13 +779,36 @@ C Inclusive structure-function model (F1F2IN21) for acceptance weighting
      >	          *(sin((theta_model/degrad)/2.d0)**2)
          nu_model = ebeam_model - Eprime
          W2_model = Mp_GeV*Mp_GeV + 2.d0*Mp_GeV*nu_model - Q2_model
-         if (Q2_model.gt.0.d0 .and. W2_model.gt.0.d0) then
-            call F1F2IN21(Z_tar,tar_atom_num,Q2_model,W2_model,
-     >           F1_model,F2_model)
+	 
+	 if (W2_model.gt.0.d0) then
+            W_model = sqrt(W2_model)
          else
-            F1_model = 0.d0
-            F2_model = 0.d0
+            W_model = -1.d0
          endif
+         if (nu_model.gt.0.d0) then
+            xbj_model = Q2_model/(2.d0*Mp_GeV*nu_model)
+         else
+            xbj_model = -1.d0
+         endif
+	else
+	   Eprime = 0.d0
+	   Q2_model = -1.d0
+	   W2_model = -1.d0
+	   nu_model = -1.d0
+	   W_model = -1.d0
+	   xbj_model = -1.d0
+	   theta_model = -1.d0
+	   F1_model = 0.d0
+	   F2_model = 0.d0
+	endif
+	 
+	if (Q2_model.gt.0.d0 .and. W2_model.gt.0.d0) then
+	   call F1F2IN21(Z_tar,tar_atom_num,Q2_model,W2_model,
+     >          F1_model,F2_model)
+	else
+	   F1_model = 0.d0
+	   F2_model = 0.d0
+	endif
 	 
 
 C --- Cross section and (optional) absolute rate (analogous to old block) ---
@@ -735,7 +816,7 @@ C --- Cross section and (optional) absolute rate (analogous to old block) ---
        sigma_f1f2   = 0.d0
        sigma_weight = 0.d0
        rate_f1f2    = 0.d0
-
+	
        if (ebeam_model.gt.0.d0 .and. Q2_model.gt.0.d0 .and.
      >     nu_model.gt.0.d0 .and. theta_model.gt.0.d0) then
 
@@ -815,28 +896,6 @@ C       convert nb -> m^2 and normalize by charge contribution
      >      xbj_model, Q2_model
        endif
 	
-	 if (W2_model.gt.0.d0) then
-            W_model = sqrt(W2_model)
-         else
-            W_model = -1.d0
-         endif
-         if (nu_model.gt.0.d0) then
-            xbj_model = Q2_model/(2.d0*Mp_GeV*nu_model)
-         else
-            xbj_model = -1.d0
-         endif
-      else
-         Eprime = 0.d0
-         Q2_model = -1.d0
-         W2_model = -1.d0
-         nu_model = -1.d0
-         W_model = -1.d0
-         xbj_model = -1.d0
-         theta_model = -1.d0
-         F1_model = 0.d0
-         F2_model = 0.d0
-      endif
-
 C Case 1 : extended cryo target:
 C Choices: 
 C 1. cryocylinder: Basic cylinder(2.65 inches diameter --> 3.37 cm radius) w/flat exit window (5 mil Al)
