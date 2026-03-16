@@ -77,6 +77,12 @@ C Event limits, topdrawer limits, physics quantities
         real *8 F1_model, F2_model
         real *8 Mp_GeV
 
+C --- Added for 3He = 2p + n construction ---
+	real*8 F1_p, F2_p
+	real*8 F1_n, F2_n
+	real*8 Z_p, A_p
+	real*8 Z_n, A_n	
+
 C --- Added: cross section (optional) absolute rate, analogous to old script ---
 	real*8 p_accept, th_accept, ph_accept
 	real*8 mott_nb, tan2, w1_model, w2_inel_model
@@ -802,14 +808,46 @@ C Inclusive structure-function model (F1F2IN21) for acceptance weighting
 	   F2_model = 0.d0
 	endif
 	 
-	if (Q2_model.gt.0.d0 .and. W2_model.gt.0.d0) then
-	   call F1F2IN21(Z_tar,tar_atom_num,Q2_model,W2_model,
-     >          F1_model,F2_model)
-	else
-	   F1_model = 0.d0
-	   F2_model = 0.d0
-	endif
-	 
+      if (Q2_model.gt.0.d0 .and. W2_model.gt.0.d0 .and.
+     >    theta_model.gt.0.d0) then
+
+C        Special handling for 3He only: 3He = 2p + n
+         if (tar_atom_num.eq.3.d0 .and. Z_tar.eq.2.d0) then
+
+C           Define proton/neutron A,Z using the same type as model inputs
+            Z_p = 1.d0
+            A_p = 1.d0
+            Z_n = 0.d0
+            A_n = 1.d0
+
+C           Free proton
+            call F1F2IN21(Z_p,A_p,Q2_model,W2_model,F1_p,F2_p)
+
+C           Free neutron
+            call F1F2IN21(Z_n,A_n,Q2_model,W2_model,F1_n,F2_n)
+
+C           3He = 2p + n
+            F1_model = 2.d0*F1_p + F1_n
+            F2_model = 2.d0*F2_p + F2_n
+
+         else
+
+C           Default behavior for all other targets
+            call F1F2IN21(Z_tar,tar_atom_num,Q2_model,W2_model,
+     >                    F1_model,F2_model)
+
+         endif
+
+      else
+
+         F1_p     = 0.d0
+         F2_p     = 0.d0
+         F1_n     = 0.d0
+         F2_n     = 0.d0
+         F1_model = 0.d0
+         F2_model = 0.d0
+
+      endif
 
 C --- Cross section and (optional) absolute rate (analogous to old block) ---
        mott_nb      = 0.d0
