@@ -7,9 +7,9 @@ module load root/6.30.04-gcc11.4.0
 cd src
 make clean
 make
-./mc_single_arm << endofinput >! ../runout/$1.out
+./mc_single_arm <<EOF |& tee "../runout/$1.out"
 $1
-endofinput
+EOF
 cd ../util/root_tree
 make clean
 make
