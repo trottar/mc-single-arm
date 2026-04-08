@@ -30,11 +30,13 @@ c
 
 
 C Local declarations.
-	integer*4	i,
-     >			chanin	/1/,
-     >			chanout	/2/,
-     >			n_trials,trial,
-     >			tmp_int
+		integer*4	i,
+	     >			chanin	/1/,
+	     >			chanout	/2/,
+	     >			n_trials,trial,
+	     >			tmp_int,
+	     >			target_good_events,
+	     >			actual_generated_trials
 
 	integer*4 Itrial                        ! TH - add this for gfortran: forces integer type cast
 	logical*4	iss
@@ -122,11 +124,12 @@ C Circular raster
 	real*8 ax_raster, ay_raster	
 
 C Control flags (from input file)
-	integer*4 ispec
-	integer*4 p_flag			!particle identification
-	logical*4 ms_flag
-	logical*4 wcs_flag
-	logical*4 store_all
+		integer*4 ispec
+		integer*4 p_flag			!particle identification
+		logical*4 ms_flag
+		logical*4 wcs_flag
+		logical*4 store_all
+		logical*4 use_good_target
 
 c	common /hutflag/ cer_flag,vac_flag
 C Hardwired control flags.
@@ -162,6 +165,13 @@ C Function definitions.
 	save		!Remember it all!
 
 C ================================ Executable Code =============================
+
+		ms_flag = .false.
+		wcs_flag = .false.
+		store_all = .false.
+		use_good_target = .false.
+		target_good_events = 0
+		actual_generated_trials = 0
 
 C Initialize
 C using SIMC unstructured version
@@ -526,22 +536,40 @@ C=======================================================================
       endif
       iss = rd_real(str_line,beam_current_uA)
 
-      if (iss) then
-        read (chanin,1001,end=1000,err=1000) str_line
-        write(*,*),str_line(1:last_char(str_line))
-        iss = rd_real(str_line,target_dens_m3)
-      endif
+	      if (iss) then
+	        read (chanin,1001,end=1000,err=1000) str_line
+	        write(*,*),str_line(1:last_char(str_line))
+	        iss = rd_real(str_line,target_dens_m3)
+	      endif
 
- 1000  continue
-      Mp_GeV = 0.93827208d0
+	      read (chanin,1001,end=1000,err=1000) str_line
+	      if (last_char(str_line).gt.0) then
+	         write(*,*),str_line(1:last_char(str_line))
+	      endif
+	      if (rd_int(str_line,target_good_events)) then
+	         if (target_good_events.gt.0) then
+	            use_good_target = .true.
+	         else
+	            target_good_events = 0
+	         endif
+	      else
+	         target_good_events = 0
+	      endif
+
+	 1000  continue
+	      Mp_GeV = 0.93827208d0
 
 
 	print *, 'ebeam_model=', ebeam_model
 	print *, 'beam_energy=', beam_energy
-	print *, 'Z_tar=', Z_tar
-	print *, 'tar_atom_num=', tar_atom_num
-	print *, 'beam_current_uA=', beam_current_uA
-	print *, 'target_dens_m3=', target_dens_m3
+		print *, 'Z_tar=', Z_tar
+		print *, 'tar_atom_num=', tar_atom_num
+		print *, 'beam_current_uA=', beam_current_uA
+		print *, 'target_dens_m3=', target_dens_m3
+		if (use_good_target) then
+		   print *, 'target_good_events=', target_good_events
+		   print *, 'max_generated_trials=', n_trials
+		endif
 C	pause
 
 	
@@ -575,13 +603,15 @@ C------------------------------------------------------------------------------C
 C DJG - If you want to use default (fixed) seed, comment out the line below
           call sgrnd(itime)
 
-	do Itrial = 1,n_trials
-	   if(ispec.eq.1) then
-	      armSTOP_successes=hSTOP_successes
-	   elseif(ispec.eq.2) then
-	      armSTOP_successes=shmsSTOP_successes
-	   endif
-	  if(mod(Itrial,200000).eq.0) write(*,*)'event #: ',
+		do Itrial = 1,n_trials
+		   if(ispec.eq.1) then
+		      armSTOP_successes=hSTOP_successes
+		   elseif(ispec.eq.2) then
+		      armSTOP_successes=shmsSTOP_successes
+		   endif
+		  if (use_good_target.and.
+     >        armSTOP_successes.ge.target_good_events) goto 600
+		  if(mod(Itrial,200000).eq.0) write(*,*)'event #: ',
      >Itrial,'       successes: ',armSTOP_successes
 
 
@@ -918,13 +948,13 @@ C If the generator throws from [-lim,+lim], then full width = 2*lim.
 		     dxptar_width = th_accept
 		     dyptar_width = ph_accept
 
-C Per-trial cross section weight in nb
+C Raw cross section weight numerator in nb.
+C Normalize by the actual generated-trial count during conversion.
 		     sigma_weight = sigma_f1f2 *
      >                              jac_E_delta *
      >                              jac_xpy *
      >                              ddelta_width *
-     >                              dxptar_width * dyptar_width /
-     >                              n_trials
+     >                              dxptar_width * dyptar_width
 C       Optional absolute rate (Hz): requires target_dens_m3 and beam_current_uA
              if (beam_current_uA.gt.0.d0 .and. target_dens_m3.gt.0.d0
      >           .and. gen_lim(6).ne.0.d0) then
@@ -933,9 +963,9 @@ C       --- after sigma_weight is computed (still in nb * phase-space) ---
 		n_areal_m2 = target_dens_m3 * targ_len_m ! (#/m^3)*m = #/m^2
 		lumi_per_C   = n_areal_m2 / echarge_uC ! 1/(m^2*uC)
 
-C       convert nb -> m^2 and normalize by charge contribution
-		sigma_weight = sigma_weight * nb_to_m2 * lumi_per_C
-		rate_f1f2 = sigma_weight * target_dens_m3 * nb_to_m2
+C       convert nb -> m^2 and keep the raw numerator.
+			sigma_weight = sigma_weight * nb_to_m2 * lumi_per_C
+			rate_f1f2 = sigma_weight * target_dens_m3 * nb_to_m2
      >                     * (beam_current_uA*1.d-6)
      >                     * targ_len_m / (echarge)
              endif
@@ -1104,21 +1134,22 @@ C Mott in nb/sr (GeV^-2 converted to nb via gev2_to_nb)
                      sigma_f1f2    = mott_nb*(w2_inel_model
      >                                + 2.d0*w1_model*tan2)
 
-C Integrate over generated phase space (dp * dtheta * dphi), old-style
+C Integrate over generated phase space (dp * dtheta * dphi), old-style.
+C Normalize by the actual generated-trial count during conversion.
 C p_spec is MeV/c in this code path; convert to GeV for consistency
-                     p_spec_GeV   = p_spec/1000.d0
-                     sigma_weight = sigma_f1f2*p_spec_GeV*p_accept*
+	                     p_spec_GeV   = p_spec/1000.d0
+	                     sigma_weight = sigma_f1f2*p_spec_GeV*p_accept*
      >                            th_accept*ph_accept
 
 C Optional absolute rate (Hz): requires target_dens_m3 and beam_current_uA
-                     if (beam_current_uA.gt.0.d0 .and.
+	                     if (beam_current_uA.gt.0.d0 .and.
      >                   target_dens_m3.gt.0.d0 .and.
      >                   gen_lim(6).ne.0.d0) then
-                        targ_len_m = abs(gen_lim(6))/100.d0
-                        rate_f1f2 = sigma_weight * target_dens_m3 * 1.d-37
+	                        targ_len_m = abs(gen_lim(6))/100.d0
+	                        rate_f1f2 = sigma_weight * target_dens_m3 * 1.d-37
      >                           * (beam_current_uA*1.d-6)
-     >                           * targ_len_m / (echarge*n_trials)
-                     endif
+     >                           * targ_len_m / (echarge)
+	                     endif
                   endif
                endif
             endif
@@ -1251,7 +1282,9 @@ C Loop for remainder of trials.
 
 500	  continue
 
-	enddo				!End of M.C. loop
+		enddo				!End of M.C. loop
+
+ 600		continue
 
 C------------------------------------------------------------------------------C
 C                           End of Monte-Carlo loop                            C
@@ -1267,15 +1300,23 @@ C Close NTUPLE file.
 	write (chanout,1003) p_spec,th_spec*degrad
         write (chanout,1004) (gen_lim(i),i=1,6)
 
-	write (chanout,1005) n_trials
+		if(ispec.eq.1) then
+		   armSTOP_successes=hSTOP_successes
+		   armSTOP_trials=hSTOP_trials
+		elseif(ispec.eq.2) then
+		   armSTOP_successes=shmsSTOP_successes
+		   armSTOP_trials=shmsSTOP_trials
+		endif
+		actual_generated_trials = armSTOP_trials
 
-	if(ispec.eq.1) then
-	   armSTOP_successes=hSTOP_successes
-	   armSTOP_trials=hSTOP_trials
-	elseif(ispec.eq.2) then
-	   armSTOP_successes=shmsSTOP_successes
-	   armSTOP_trials=shmsSTOP_trials
-	endif
+		write (chanout,1005) n_trials,actual_generated_trials
+		if (use_good_target) then
+		   write (chanout,1017) target_good_events,armSTOP_successes
+		   if (armSTOP_successes.lt.target_good_events) then
+		      write (chanout,1018)
+		   endif
+		endif
+		write (chanout,1019) actual_generated_trials
 
 C Indicate where particles are lost in spectrometer.
 	if(ispec.eq.2) then
@@ -1336,9 +1377,15 @@ C Compute reconstruction resolutions.
      >		t2,dph_var(1)/armSTOP_successes,t3,
      > ztg_var(1)/armSTOP_successes,t4
 
-	write(6,*) armSTOP_trials,' Trials',armSTOP_successes
+		write(6,*) armSTOP_trials,' Trials',armSTOP_successes
      > ,' Successes'
-	write (6,1011) dpp_var(1)/armSTOP_successes,t1,
+		if (use_good_target) then
+		   write (6,1017) target_good_events,armSTOP_successes
+		   if (armSTOP_successes.lt.target_good_events) then
+		      write (6,1018)
+		   endif
+		endif
+		write (6,1011) dpp_var(1)/armSTOP_successes,t1,
      > dth_var(1)/armSTOP_successes,
      >		t2,dph_var(1)/armSTOP_successes,t3,
      > ztg_var(1)/armSTOP_successes,t4
@@ -1367,9 +1414,9 @@ C =============================== Format Statements ============================
 !inp     >	g18.8,' =  Hor. 1/2 gap size (cm)',/,
 !inp     >	g18.8,' =  Vert. 1/2 gap size (cm)')
 
-1005	format('!',/,'! Summary:',/,'!',/,
-!     >	i,' Monte-Carlo trials:')
-     >  i11,' Monte-Carlo trials:')
+	1005	format('!',/,'! Summary:',/,'!',/,
+	     >  i11,' Monte-Carlo trial limit:',/,
+	     >  i11,' Monte-Carlo trials generated:')
 
 1006	format(i11,' Initial Trials',/
      >  i11,' Trials made it to the hut',/
@@ -1397,13 +1444,18 @@ C =============================== Format Statements ============================
 !1008	format(8i)
 !1009	format(1x,i4,g,i)
 !1010	format(a,i)
-1011	format(
-     >  'DPP ave error, resolution = ',2g18.8,' %',/,
-     >  'DTH ave error, resolution = ',2g18.8,' mr',/,
-     >  'DPH ave error, resolution = ',2g18.8,' mr',/,
-     >  'ZTG ave error, resolution = ',2g18.8,' cm')
+	1011	format(
+	     >  'DPP ave error, resolution = ',2g18.8,' %',/,
+	     >  'DTH ave error, resolution = ',2g18.8,' mr',/,
+	     >  'DPH ave error, resolution = ',2g18.8,' mr',/,
+	     >  'ZTG ave error, resolution = ',2g18.8,' cm')
 
-1012	format(1x,16i4)
+	1017	format(i11,' Target good events requested',/,
+     >         i11,' Good events achieved')
+	1018	format('WARNING: reached max generated trials before target good events.')
+	1019	format(i11,' Event weight normalization denominator (generated trials)')
+
+	1012	format(1x,16i4)
 
 1015	format(/,
      >     i11,' stopped in the TARG APERT HOR',/
