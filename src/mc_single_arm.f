@@ -949,7 +949,7 @@ C If the generator throws from [-lim,+lim], then full width = 2*lim.
 		     dyptar_width = ph_accept
 
 C Raw cross section weight numerator in nb.
-C Normalize by the actual generated-trial count during conversion.
+C Normalize after the run once the actual generated-trial count is known.
 		     sigma_weight = sigma_f1f2 *
      >                              jac_E_delta *
      >                              jac_xpy *
@@ -1222,13 +1222,9 @@ C------------------------------------------------------------------------------C
 
 C Close NTUPLE file.
 
-	close(NtupleIO)
-	if (spec_ntuple) close(SPecNtupleIO)
+		close(NtupleIO)
+		if (spec_ntuple) close(SPecNtupleIO)
 
-
-	write (chanout,1002)
-	write (chanout,1003) p_spec,th_spec*degrad
-        write (chanout,1004) (gen_lim(i),i=1,6)
 
 		if(ispec.eq.1) then
 		   armSTOP_successes=hSTOP_successes
@@ -1238,9 +1234,17 @@ C Close NTUPLE file.
 		   armSTOP_trials=shmsSTOP_trials
 		endif
 		actual_generated_trials = armSTOP_trials
+		if (actual_generated_trials.gt.0) then
+		   call normalize_ntuple_weights(hbook_filename,
+     >          actual_generated_trials)
+		endif
 
-		write (chanout,1005) n_trials,actual_generated_trials
-		if (use_good_target) then
+		write (chanout,1002)
+		write (chanout,1003) p_spec,th_spec*degrad
+        write (chanout,1004) (gen_lim(i),i=1,6)
+
+			write (chanout,1005) n_trials,actual_generated_trials
+			if (use_good_target) then
 		   write (chanout,1017) target_good_events,armSTOP_successes
 		   if (armSTOP_successes.lt.target_good_events) then
 		      write (chanout,1018)
@@ -1383,7 +1387,7 @@ C =============================== Format Statements ============================
  1017 format(i11,' Target good events requested',/,
      >         i11,' Good events achieved')
  1018 format('WARNING: reached max generated trials before target good events.')
- 1019 format(i11,' Actual generated trials for normalization')
+ 1019 format(i11,' Actual generated trials used to normalize weight/rate_hz')
 
  1012 format(1x,16i4)
 
@@ -1461,8 +1465,90 @@ C =============================== Format Statements ============================
  1200 format(/,'! ',a,' Coefficients',/,/,
      >  (5(g18.8,','))
      >  )
- 1300 format(/,'! ',a,' Coefficient uncertainties',/,/,
+	 1300 format(/,'! ',a,' Coefficient uncertainties',/,/,
      >  (5(g18.8,','))
      >  )
 
-	end
+		end
+
+      subroutine normalize_ntuple_weights(filename,norm_trials)
+      implicit none
+      character*(*) filename
+      integer*4 norm_trials
+      integer*4 io_in,io_out,check,i,weight_idx,rate_idx
+      integer*4 nvars
+      integer*4 last_char
+      real*8 ntup(80),norm_d
+      character*16 nt_names(80)
+      character*132 tmpfile
+      character*300 cmd
+
+      if (norm_trials.le.0) return
+
+      io_in = 91
+      io_out = 92
+      weight_idx = 0
+      rate_idx = 0
+      norm_d = dble(norm_trials)
+
+      tmpfile = filename(1:last_char(filename))//'.normtmp'
+
+      open(io_in,file=filename,status='old',form='unformatted',
+     >     access='sequential',iostat=check)
+      if (check.ne.0) then
+         write(6,*) 'WARNING: could not reopen ntuple file for',
+     >        ' normalization: ',filename(1:last_char(filename))
+         return
+      endif
+
+      open(io_out,file=tmpfile,status='unknown',form='unformatted',
+     >     access='sequential',iostat=check)
+      if (check.ne.0) then
+         write(6,*) 'WARNING: could not open temp ntuple file for',
+     >        ' normalization: ',tmpfile(1:last_char(tmpfile))
+         close(io_in)
+         return
+      endif
+
+      read(io_in,iostat=check) nvars
+      if (check.ne.0) goto 900
+      write(io_out) nvars
+
+      do i=1,nvars
+         read(io_in,iostat=check) nt_names(i)
+         if (check.ne.0) goto 900
+         if (nt_names(i).eq.'weight') weight_idx = i
+         if (nt_names(i).eq.'rate_hz') rate_idx = i
+         write(io_out) nt_names(i)
+      enddo
+
+ 100  continue
+      do i=1,nvars
+         read(io_in,iostat=check) ntup(i)
+         if (check.lt.0) goto 200
+         if (check.ne.0) goto 900
+      enddo
+
+      if (weight_idx.gt.0) ntup(weight_idx) = ntup(weight_idx)/norm_d
+      if (rate_idx.gt.0) ntup(rate_idx) = ntup(rate_idx)/norm_d
+
+      do i=1,nvars
+         write(io_out) ntup(i)
+      enddo
+      goto 100
+
+ 200  continue
+      close(io_in)
+      close(io_out)
+      cmd = 'mv -f ' // tmpfile(1:last_char(tmpfile)) // ' ' //
+     >      filename(1:last_char(filename))
+      call system(cmd(1:last_char(cmd)))
+      return
+
+ 900  continue
+      write(6,*) 'WARNING: failed to normalize ntuple weights for ',
+     >     filename(1:last_char(filename))
+      close(io_in)
+      close(io_out,status='delete')
+      return
+      end
