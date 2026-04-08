@@ -296,13 +296,13 @@ C Strip off header
 
 ! Read data lines.
 
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	iss = rd_int(str_line,n_trials)
 	if (.not.iss) stop 'ERROR (ntrials) in setup!'
 
 ! Spectrometer flag:
 	read (chanin,1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	iss = rd_int(str_line,ispec)
 	if (.not.iss) stop 'ERROR (Spectrometer selection) in setup!'
 ! Open HBOOK/NTUPLE file here
@@ -319,13 +319,13 @@ C Strip off header
 
 ! Spectrometer momentum:
 	read (chanin,1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	iss = rd_real(str_line,p_spec)
 	if (.not.iss) stop 'ERROR (Spec momentum) in setup!'
 
 ! Spectrometer angle:
 	read (chanin,1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	iss = rd_real(str_line,th_spec)
 	if (.not.iss) stop 'ERROR (Spec theta) in setup!'
 	th_spec = abs(th_spec) / degrad
@@ -335,12 +335,12 @@ C Strip off header
 ! M.C. limits (half width's for dp,th,ph, full width's for x,y,z)
 	do i=1,3
 	  read (chanin,1001) str_line
-	  write(*,*),str_line(1:last_char(str_line))
+	  write(*,*) str_line(1:last_char(str_line))
 	  iss = rd_real(str_line,gen_lim(i))
 	  if (.not.iss) stop 'ERROR (M.C. limits) in setup!'
 	  gen_lim_down(i) = gen_lim(i)
 	  read (chanin,1001) str_line
-	  write(*,*),str_line(1:last_char(str_line))
+	  write(*,*) str_line(1:last_char(str_line))
 	  iss = rd_real(str_line,gen_lim(i))
 	  if (.not.iss) stop 'ERROR (M.C. limits) in setup!'
 	  gen_lim_up(i) = gen_lim(i)
@@ -353,7 +353,7 @@ C Acceptance (constant for the run), analogous to old script
 
 	do i = 4,6
 	  read (chanin,1001) str_line
-	  write(*,*),str_line(1:last_char(str_line))
+	  write(*,*) str_line(1:last_char(str_line))
 	  iss = rd_real(str_line,gen_lim(i))
 	  if (.not.iss) stop 'ERROR (M.C. limits) in setup!'
 	enddo
@@ -361,104 +361,104 @@ C Acceptance (constant for the run), analogous to old script
 ! Raster size
 	do i=7,8
 	   read (chanin,1001) str_line
-	   write(*,*),str_line(1:last_char(str_line))
+	   write(*,*) str_line(1:last_char(str_line))
 	   iss = rd_real(str_line,gen_lim(i))
 	   if (.not.iss) stop 'ERROR (Fast Raster) in setup'
 	enddo
 
 ! Cuts on reconstructed quantities
 	read (chanin,1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	if (.not.rd_real(str_line,cut_dpp)) 
      > stop 'ERROR (CUT_DPP) in setup!'
 
 	read (chanin,1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	if (.not.rd_real(str_line,cut_dth)) 
      > stop 'ERROR (CUT_DTH) in setup!'
 
 	read (chanin,1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	if (.not.rd_real(str_line,cut_dph)) 
      > stop 'ERROR (CUT_DPH) in setup!'
 
 	read (chanin,1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	if (.not.rd_real(str_line,cut_z)) 
      > stop 'ERROR (CUT_Z) in setup!'
 
 ! Read in radiation length of target material in cm
 	read (chanin,1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	if (.not.rd_real(str_line,rad_len_cm)) 
      > stop 'ERROR (RAD_LEN_CM) in setup!'
 
 ! Beam and target offsets
 	read (chanin, 1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	iss = rd_real(str_line,xoff)
 	if(.not.iss) stop 'ERROR (xoff) in setup!'
 
 	read (chanin, 1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	iss = rd_real(str_line,yoff)
 	if(.not.iss) stop 'ERROR (yoff) in setup!'
 
 	read (chanin, 1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	iss = rd_real(str_line,zoff)
 	if(.not.iss) stop 'ERROR (zoff) in setup!'
 
 ! Spectrometer offsets
 	read (chanin, 1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	iss = rd_real(str_line,spec_xoff)
 	if(.not.iss) stop 'ERROR (spect. xoff) in setup!'
 
 	read (chanin, 1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	iss = rd_real(str_line,spec_yoff)
 	if(.not.iss) stop 'ERROR (spect. yoff) in setup!'
 
 	read (chanin, 1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	iss = rd_real(str_line,spec_zoff)
 	if(.not.iss) stop 'ERROR (spect. zoff) in setup!'
 
 	read (chanin, 1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	iss = rd_real(str_line,spec_xpoff)
 	if(.not.iss) stop 'ERROR (spect. xpoff) in setup!'
 
 	read (chanin, 1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	iss = rd_real(str_line,spec_ypoff)
 	if(.not.iss) stop 'ERROR (spect. ypoff) in setup!'
 
 ! read in flag for particle type.
 	read (chanin,1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	if (.not.rd_int(str_line,p_flag)) 
      > stop 'ERROR: p_flag in setup file!'
 
 
 ! Read in flag for multiple scattering.
 	read (chanin,1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	if (.not.rd_int(str_line,tmp_int)) 
      > stop 'ERROR: ms_flag in setup file!'
 	if (tmp_int.eq.1) ms_flag = .true.
 
 ! Read in flag for wire chamber smearing.
 	read (chanin,1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	if (.not.rd_int(str_line,tmp_int)) 
      > stop 'ERROR: wcs_flag in setup file!'
 	if (tmp_int.eq.1) wcs_flag = .true.
 
 ! Read in flag to keep all events - success or not
 	read (chanin,1001) str_line
-	write(*,*),str_line(1:last_char(str_line))
+	write(*,*) str_line(1:last_char(str_line))
 	if (.not.rd_int(str_line,tmp_int)) 
      > stop 'ERROR: store_all in setup file!'
 	if (tmp_int.eq.1) store_all = .true.
@@ -486,13 +486,13 @@ C=======================================================================
       dyptar_width = 0.d0
 	
       read (chanin,1001,end=1000,err=1000) str_line
-      write(*,*),str_line(1:last_char(str_line))
+      write(*,*) str_line(1:last_char(str_line))
       iss = rd_real(str_line,beam_energy)
 
 	
 ! Read in flag to use sieve
         read (chanin,1001,end=1000,err=1000) str_line
-        write(*,*),str_line(1:last_char(str_line))
+        write(*,*) str_line(1:last_char(str_line))
         if (.not.rd_int(str_line,tmp_int)) 
      > stop 'ERROR: use_sieve in setup file!'
         if (tmp_int.eq.1) then
@@ -503,17 +503,17 @@ C=======================================================================
 
 !     Read in flag for 'target atomic number (Z+N)' for elastic event if present
       read (chanin,1001,end=1000,err=1000) str_line
-      write(*,*),str_line(1:last_char(str_line))
+      write(*,*) str_line(1:last_char(str_line))
       iss = rd_real(str_line,tar_atom_num)
 
 !     Read in beam energy (GeV) for F1F2IN21 model (optional, <=0 disables call)
       read (chanin,1001,end=1000,err=1000) str_line
-      write(*,*),str_line(1:last_char(str_line))
+      write(*,*) str_line(1:last_char(str_line))
       iss = rd_real(str_line,ebeam_model)
 
 !     Read in target charge Z for F1F2IN21 model (optional)
       read (chanin,1001,end=1000,err=1000) str_line
-      write(*,*),str_line(1:last_char(str_line))
+      write(*,*) str_line(1:last_char(str_line))
       iss = rd_real(str_line,Z_tar)
 
 
@@ -525,26 +525,26 @@ C=======================================================================
 !     ("Multiple scattering type" and "Enegy Loss"). If present,
 !     skip them before reading luminosity inputs.
       read (chanin,1001,end=1000,err=1000) str_line
-      write(*,*),str_line(1:last_char(str_line))
+      write(*,*) str_line(1:last_char(str_line))
       if (index(str_line,'Multiple scattering type').gt.0 .or.
      >    index(str_line,'Enegy Loss').gt.0) then
         read (chanin,1001,end=1000,err=1000) str_line
-        write(*,*),str_line(1:last_char(str_line))
+        write(*,*) str_line(1:last_char(str_line))
 
         read (chanin,1001,end=1000,err=1000) str_line
-        write(*,*),str_line(1:last_char(str_line))
+        write(*,*) str_line(1:last_char(str_line))
       endif
       iss = rd_real(str_line,beam_current_uA)
 
 	      if (iss) then
 	        read (chanin,1001,end=1000,err=1000) str_line
-	        write(*,*),str_line(1:last_char(str_line))
+	        write(*,*) str_line(1:last_char(str_line))
 	        iss = rd_real(str_line,target_dens_m3)
 	      endif
 
 	      read (chanin,1001,end=1000,err=1000) str_line
 	      if (last_char(str_line).gt.0) then
-	         write(*,*),str_line(1:last_char(str_line))
+	         write(*,*) str_line(1:last_char(str_line))
 	      endif
 	      if (rd_int(str_line,target_good_events)) then
 	         if (target_good_events.gt.0) then
@@ -1465,12 +1465,11 @@ C =============================== Format Statements ============================
  1200 format(/,'! ',a,' Coefficients',/,/,
      >  (5(g18.8,','))
      >  )
-	 1300 format(/,'! ',a,' Coefficient uncertainties',/,/,
+ 1300 format(/,'! ',a,' Coefficient uncertainties',/,/,
      >  (5(g18.8,','))
      >  )
 
-		end
-
+      end
       subroutine normalize_ntuple_weights(filename,norm_trials)
       implicit none
       character*(*) filename
