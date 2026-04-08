@@ -30,7 +30,7 @@ C Ntuple ID stuff
       integer io,i,j,check
       integer chanout
       integer nev
-      integer rate_idx
+      integer weight_idx,rate_idx
       real*8 ntup(80)
       real*4 ntup_out(80)
       logical*4 apply_norm
@@ -44,6 +44,7 @@ C Ntuple ID stuff
       NtupleID=defaultID
       recl=4096
       bank=8000
+      weight_idx = 0
       rate_idx = 0
       apply_norm = .false.
       generated_trials = 0.d0
@@ -76,15 +77,16 @@ c output filename
       write(6,*) 'Variables in output file: ',NtupleSize
       do i=1,NtupleSize
          read(io) NtupleTag(i)
+         if (NtupleTag(i).eq.'weight') weight_idx = i
          if (NtupleTag(i).eq.'rate_hz') rate_idx = i
          write(6,*) NtupleTag(i)
       enddo
 
       if (apply_norm) then
-         write(6,*) 'Normalizing rate_hz by generated trials = ',
+         write(6,*) 'Normalizing weight/rate_hz by generated trials = ',
      >              generated_trials
       else
-         write(6,*) 'Using stored weight and rate_hz values',
+         write(6,*) 'Using stored weight/rate_hz values',
      >              ' without renormalization.'
       endif
 
@@ -113,6 +115,10 @@ c now loop over events
             ntup_out(i)=ntup(i)
          enddo ! loop over ntuple variables
          if (apply_norm.and.generated_trials.gt.0.d0) then
+            if (weight_idx.gt.0) then
+               ntup_out(weight_idx) =
+     >              ntup_out(weight_idx)/generated_trials
+            endif
             if (rate_idx.gt.0) then
                ntup_out(rate_idx) =
      >              ntup_out(rate_idx)/generated_trials
@@ -148,7 +154,10 @@ c now loop over events
  10   continue
       read(io2,'(A)',end=20,iostat=check) line
       if (check.ne.0) goto 20
-      if (index(line,
+      if (index(line,'Monte-Carlo trials generated').gt.0 .or.
+     >    index(line,
+     >    'Actual generated trials for normalization').gt.0 .or.
+     >    index(line,
      >    'Generated-trial normalization denominator').gt.0 .or.
      >    index(line,
      >    'Event weight normalization denominator').gt.0) then

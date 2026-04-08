@@ -948,9 +948,8 @@ C If the generator throws from [-lim,+lim], then full width = 2*lim.
 		     dxptar_width = th_accept
 		     dyptar_width = ph_accept
 
-C Cross section weight stored per event.
-C Leave weight unchanged in conversion; only rate_hz is renormalized
-C by the actual generated-trial count if requested.
+C Raw cross section weight numerator in nb.
+C Normalize by the actual generated-trial count during conversion.
 		     sigma_weight = sigma_f1f2 *
      >                              jac_E_delta *
      >                              jac_xpy *
@@ -1092,80 +1091,9 @@ C       RLT: To keep RHCS consistency with HCANA, SHMS ztar must pick up minus s
 	    endif
             ytar_recon = y_s
 
-C Inclusive structure-function model (F1F2IN21) for acceptance weighting
-            if (ebeam_model.gt.0.d0) then
-               Eprime = p_spec*(1.d0 + dpp_recon/100.d0)/1000.d0
-               if(ispec.eq.1) then	! spectrometer on right
-                  theta_model = acos((cos_ts+(dth_recon/1000.d0)*sin_ts)
-     >	               /sqrt(1+(dth_recon/1000.d0)**2
-     >                 +(dph_recon/1000.d0)**2))*degrad
-               elseif(ispec.eq.2) then ! spectrometer on left
-                  theta_model = acos((cos_ts-(dth_recon/1000.d0)*sin_ts)
-     >	               /sqrt(1+(dth_recon/1000.d0)**2
-     >                 +(dph_recon/1000.d0)**2))*degrad
-               endif
-               Q2_model = 4.d0*ebeam_model*Eprime
-     >	          *(sin((theta_model/degrad)/2.d0)**2)
-               nu_model = ebeam_model - Eprime
-               W2_model = Mp_GeV*Mp_GeV + 2.d0*Mp_GeV*nu_model - Q2_model
-
-               if (W2_model.gt.0.d0) then
-                  W_model = sqrt(W2_model)
-               endif
-               if (nu_model.gt.0.d0) then
-                  xbj_model = Q2_model/(2.d0*Mp_GeV*nu_model)
-               endif
-
-               if (Q2_model.gt.0.d0 .and. W2_model.gt.0.d0) then
-                  call F1F2IN21(Z_tar,tar_atom_num,Q2_model,W2_model,
-     >                 F1_model,F2_model)
-
-                  if (nu_model.gt.0.d0 .and. theta_model.gt.0.d0
-     >                .and. xbj_model.le.0.99d0) then
-                     th2  = (theta_model/degrad)/2.d0
-                     tan2 = tan(th2)**2
-
-C Mott in nb/sr (GeV^-2 converted to nb via gev2_to_nb)
-                     mott_nb = ((alpha_em*cos(th2)/
-     >                 (2.d0*ebeam_model*sin(th2)*sin(th2)))**2)*
-     >                 gev2_to_nb
-
-                     w1_model      = F1_model/Mp_GeV
-                     w2_inel_model = F2_model/nu_model
-                     sigma_f1f2    = mott_nb*(w2_inel_model
-     >                                + 2.d0*w1_model*tan2)
-
-C Integrate over generated phase space (dp * dtheta * dphi), old-style.
-C Leave weight unchanged in conversion; only rate_hz is renormalized
-C by the actual generated-trial count if requested.
-C p_spec is MeV/c in this code path; convert to GeV for consistency
-	                     p_spec_GeV   = p_spec/1000.d0
-	                     sigma_weight = sigma_f1f2*p_spec_GeV*p_accept*
-     >                            th_accept*ph_accept
-
-C Optional absolute rate (Hz): requires target_dens_m3 and beam_current_uA
-	                     if (beam_current_uA.gt.0.d0 .and.
-     >                   target_dens_m3.gt.0.d0 .and.
-     >                   gen_lim(6).ne.0.d0) then
-	                        targ_len_m = abs(gen_lim(6))/100.d0
-	                        rate_f1f2 = sigma_weight * target_dens_m3 * 1.d-37
-     >                           * (beam_current_uA*1.d-6)
-     >                           * targ_len_m / (echarge)
-	                     endif
-                  endif
-               endif
-            endif
-
-            if ((Itrial.le.50).or.(mod(Itrial,500).lt.10)) then
-               write(*,'("trial #",i8," xsec(nb)=",G14.5,
-     >         " weight=",G14.5," rate(Hz)=",G14.5," at x,Q2=",2F8.4)')
-     >         Itrial, sigma_f1f2, sigma_weight, rate_f1f2,
-     >         xbj_model, Q2_model
-            endif
-
 C Compute sums for calculating reconstruction variances.
-	    dpp_var(1) = dpp_var(1) + (dpp_recon - dpp_init)
-	    dth_var(1) = dth_var(1) + (dth_recon - dth_init)
+		    dpp_var(1) = dpp_var(1) + (dpp_recon - dpp_init)
+		    dth_var(1) = dth_var(1) + (dth_recon - dth_init)
 	    dph_var(1) = dph_var(1) + (dph_recon - dph_init)
 	    ztg_var(1) = ztg_var(1) + (ztar_recon - ztar_init)
 
@@ -1455,7 +1383,7 @@ C =============================== Format Statements ============================
  1017 format(i11,' Target good events requested',/,
      >         i11,' Good events achieved')
  1018 format('WARNING: reached max generated trials before target good events.')
- 1019 format(i11,' Generated-trial normalization denominator')
+ 1019 format(i11,' Actual generated trials for normalization')
 
  1012 format(1x,16i4)
 

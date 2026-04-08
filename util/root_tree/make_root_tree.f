@@ -9,7 +9,7 @@ C     Program to convert simc .bin file to root tree
       integer i,j,nev,check
       integer*4 io
       integer*4 NtupleSize
-      integer*4 rate_idx
+      integer*4 weight_idx,rate_idx
       integer GetNumBranches
       external GetNumBranches
       logical*4 apply_norm
@@ -21,6 +21,7 @@ C     Program to convert simc .bin file to root tree
 
       parameter(nev=10000000)
       io=99
+      weight_idx = 0
       rate_idx = 0
       apply_norm = .false.
       generated_trials = 0.d0
@@ -43,16 +44,17 @@ c output filename
       write(6,*) 'Variables in output file:'
       do i=1,NtupleSize
          read(io) NtupleTag(i)
+         if (NtupleTag(i).eq.'weight') weight_idx = i
          if (NtupleTag(i).eq.'rate_hz') rate_idx = i
          call AddNtBranch(ntup_out(i),NtupleTag(i))
          write(6,*) NtupleTag(i)
       enddo
 
       if (apply_norm) then
-         write(6,*) 'Normalizing rate_hz by generated trials = ',
+         write(6,*) 'Normalizing weight/rate_hz by generated trials = ',
      >              generated_trials
       else
-         write(6,*) 'Using stored weight and rate_hz values',
+         write(6,*) 'Using stored weight/rate_hz values',
      >              ' without renormalization.'
       endif
 
@@ -68,6 +70,10 @@ c now loop over events
             ntup_out(i)=ntup(i)
          enddo ! loop over ntuple variables
          if (apply_norm.and.generated_trials.gt.0.d0) then
+            if (weight_idx.gt.0) then
+               ntup_out(weight_idx) =
+     >              ntup_out(weight_idx)/generated_trials
+            endif
             if (rate_idx.gt.0) then
                ntup_out(rate_idx) =
      >              ntup_out(rate_idx)/generated_trials
@@ -106,7 +112,10 @@ c now loop over events
  10   continue
       read(io2,'(A)',end=20,iostat=check) line
       if (check.ne.0) goto 20
-      if (index(line,
+      if (index(line,'Monte-Carlo trials generated').gt.0 .or.
+     >    index(line,
+     >    'Actual generated trials for normalization').gt.0 .or.
+     >    index(line,
      >    'Generated-trial normalization denominator').gt.0 .or.
      >    index(line,
      >    'Event weight normalization denominator').gt.0) then
