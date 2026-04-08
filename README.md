@@ -76,8 +76,10 @@ Info on infiles
 * If `target_good_events > 0`, the generator will stop as soon as that many good
   events are reached, or when the generated-trial limit is hit, whichever comes first.
 * Default behavior is unchanged if the extra line is omitted or set to `0`.
-* In good-event-target mode, the converter normalizes `weight` and `rate_hz`
+* In good-event-target mode, the converter normalizes `rate_hz`
   using the actual generated-trial count recorded in `outfiles/<run>.out`.
+* The stored `weight` branch is left unchanged; downstream analysis can keep
+  applying its usual SIMC normalization factor.
 * dp/p down and up should be at least -15.0 and 25.0 
 * theta down and up is dy/dz , horizontal angle relative to central ray keep at least -55,55mr
 * phi down and up is the dx/dz, vertical angle relative to central ray ,keep at least -50, 50mr

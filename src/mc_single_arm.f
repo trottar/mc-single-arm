@@ -948,8 +948,9 @@ C If the generator throws from [-lim,+lim], then full width = 2*lim.
 		     dxptar_width = th_accept
 		     dyptar_width = ph_accept
 
-C Raw cross section weight numerator in nb.
-C Normalize by the actual generated-trial count during conversion.
+C Cross section weight stored per event.
+C Leave weight unchanged in conversion; only rate_hz is renormalized
+C by the actual generated-trial count if requested.
 		     sigma_weight = sigma_f1f2 *
      >                              jac_E_delta *
      >                              jac_xpy *
@@ -1135,7 +1136,8 @@ C Mott in nb/sr (GeV^-2 converted to nb via gev2_to_nb)
      >                                + 2.d0*w1_model*tan2)
 
 C Integrate over generated phase space (dp * dtheta * dphi), old-style.
-C Normalize by the actual generated-trial count during conversion.
+C Leave weight unchanged in conversion; only rate_hz is renormalized
+C by the actual generated-trial count if requested.
 C p_spec is MeV/c in this code path; convert to GeV for consistency
 	                     p_spec_GeV   = p_spec/1000.d0
 	                     sigma_weight = sigma_f1f2*p_spec_GeV*p_accept*
@@ -1453,7 +1455,7 @@ C =============================== Format Statements ============================
  1017 format(i11,' Target good events requested',/,
      >         i11,' Good events achieved')
  1018 format('WARNING: reached max generated trials before target good events.')
- 1019 format(i11,' Event weight normalization denominator (generated trials)')
+ 1019 format(i11,' Generated-trial normalization denominator')
 
  1012 format(1x,16i4)
 
