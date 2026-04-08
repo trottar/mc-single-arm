@@ -30,13 +30,13 @@ c
 
 
 C Local declarations.
-		integer*4	i,
-	     >			chanin	/1/,
-	     >			chanout	/2/,
-	     >			n_trials,trial,
-	     >			tmp_int,
-	     >			target_good_events,
-	     >			actual_generated_trials
+      integer*4 i,
+     >          chanin /1/,
+     >          chanout /2/,
+     >          n_trials,trial,
+     >          tmp_int,
+     >          target_good_events,
+     >          actual_generated_trials
 
 	integer*4 Itrial                        ! TH - add this for gfortran: forces integer type cast
 	logical*4	iss
@@ -271,7 +271,7 @@ C Open setup file.
 
 	write(*,*)'Enter input filename (assumed to be in infiles dir)'
 	read(*,1968) rawname
- 1968	format(a)
+ 1968 format(a)
 	filename = '../infiles/'//rawname(1:last_char(rawname))//'.inp'
 	print *,filename,'opened'
 	open(unit=chanin,status='old',file=filename)
@@ -556,8 +556,8 @@ C=======================================================================
 	         target_good_events = 0
 	      endif
 
-	 1000  continue
-	      Mp_GeV = 0.93827208d0
+ 1000 continue
+      Mp_GeV = 0.93827208d0
 
 
 	print *, 'ebeam_model=', ebeam_model
@@ -603,15 +603,15 @@ C------------------------------------------------------------------------------C
 C DJG - If you want to use default (fixed) seed, comment out the line below
           call sgrnd(itime)
 
-		do Itrial = 1,n_trials
-		   if(ispec.eq.1) then
-		      armSTOP_successes=hSTOP_successes
-		   elseif(ispec.eq.2) then
-		      armSTOP_successes=shmsSTOP_successes
-		   endif
-		  if (use_good_target.and.
+      do Itrial = 1,n_trials
+         if(ispec.eq.1) then
+            armSTOP_successes=hSTOP_successes
+         elseif(ispec.eq.2) then
+            armSTOP_successes=shmsSTOP_successes
+         endif
+         if (use_good_target.and.
      >        armSTOP_successes.ge.target_good_events) goto 600
-		  if(mod(Itrial,200000).eq.0) write(*,*)'event #: ',
+         if(mod(Itrial,200000).eq.0) write(*,*)'event #: ',
      >Itrial,'       successes: ',armSTOP_successes
 
 
@@ -1280,11 +1280,11 @@ C for spectrometer ntuples
 C We are done with this event, whether GOOD or BAD.
 C Loop for remainder of trials.
 
-500	  continue
+ 500  continue
 
-		enddo				!End of M.C. loop
+      enddo                           !End of M.C. loop
 
- 600		continue
+ 600  continue
 
 C------------------------------------------------------------------------------C
 C                           End of Monte-Carlo loop                            C
@@ -1396,13 +1396,13 @@ C ALL done!
 
 C =============================== Format Statements ============================
 
-1001	format(a)
-1002	format('!',/,'! Uniform illumination Monte-Carlo results')
-1003	format('!',/'! Spectrometer setting:',/,'!',/,
-     >g11.5,' =  P  spect (MeV)',/,
-     >g11.5,' =  TH spect (deg)')
+ 1001 format(a)
+ 1002 format('!',/,'! Uniform illumination Monte-Carlo results')
+ 1003 format('!',/'! Spectrometer setting:',/,'!',/,
+     > g11.5,' =  P  spect (MeV)',/,
+     > g11.5,' =  TH spect (deg)')
 
-1004	format('!',/'! Monte-Carlo limits:',/,'!',/,
+ 1004 format('!',/'! Monte-Carlo limits:',/,'!',/,
      >  g11.5,'= GEN_LIM(1) - DP/P   (half width,% )',/,
      >  g11.5,'= GEN_LIM(2) - Theta  (half width,mr)',/,
      >  g11.5,'= GEN_LIM(3) - Phi    (half width,mr)',/,
@@ -1414,11 +1414,11 @@ C =============================== Format Statements ============================
 !inp     >	g18.8,' =  Hor. 1/2 gap size (cm)',/,
 !inp     >	g18.8,' =  Vert. 1/2 gap size (cm)')
 
-	1005	format('!',/,'! Summary:',/,'!',/,
-	     >  i11,' Monte-Carlo trial limit:',/,
-	     >  i11,' Monte-Carlo trials generated:')
+ 1005 format('!',/,'! Summary:',/,'!',/,
+     >  i11,' Monte-Carlo trial limit:',/,
+     >  i11,' Monte-Carlo trials generated:')
 
-1006	format(i11,' Initial Trials',/
+ 1006 format(i11,' Initial Trials',/
      >  i11,' Trials made it to the hut',/
      >  i11,' Trial cut in dc1',/
      >  i11,' Trial cut in dc2',/
@@ -1430,7 +1430,7 @@ C =============================== Format Statements ============================
      >  i11,' Trials passed all cuts and were histogrammed.',/
      >  )
 
- 1007	format(i11,' Initial Trials',/
+ 1007 format(i11,' Initial Trials',/
      >  i11,' Trials made it to the hut',/
      >  i11,' Trial cut in dc1',/
      >  i11,' Trial cut in dc2',/
@@ -1444,20 +1444,20 @@ C =============================== Format Statements ============================
 !1008	format(8i)
 !1009	format(1x,i4,g,i)
 !1010	format(a,i)
-	1011	format(
-	     >  'DPP ave error, resolution = ',2g18.8,' %',/,
-	     >  'DTH ave error, resolution = ',2g18.8,' mr',/,
-	     >  'DPH ave error, resolution = ',2g18.8,' mr',/,
-	     >  'ZTG ave error, resolution = ',2g18.8,' cm')
+ 1011 format(
+     >  'DPP ave error, resolution = ',2g18.8,' %',/,
+     >  'DTH ave error, resolution = ',2g18.8,' mr',/,
+     >  'DPH ave error, resolution = ',2g18.8,' mr',/,
+     >  'ZTG ave error, resolution = ',2g18.8,' cm')
 
-	1017	format(i11,' Target good events requested',/,
+ 1017 format(i11,' Target good events requested',/,
      >         i11,' Good events achieved')
-	1018	format('WARNING: reached max generated trials before target good events.')
-	1019	format(i11,' Event weight normalization denominator (generated trials)')
+ 1018 format('WARNING: reached max generated trials before target good events.')
+ 1019 format(i11,' Event weight normalization denominator (generated trials)')
 
-	1012	format(1x,16i4)
+ 1012 format(1x,16i4)
 
-1015	format(/,
+ 1015 format(/,
      >     i11,' stopped in the TARG APERT HOR',/
      >     i11,' stopped in the TARG APERT VERT',/
      >     i11,' stopped in the TARG APERT OCTAGON',/
@@ -1527,11 +1527,11 @@ C =============================== Format Statements ============================
      >     i11,' stopped in Vacuum Pipe Plane-4 (id=35)',/
      >     )
 
-1100	format('!',79('-'),/,'! ',a,/,'!')
-1200	format(/,'! ',a,' Coefficients',/,/,
+ 1100 format('!',79('-'),/,'! ',a,/,'!')
+ 1200 format(/,'! ',a,' Coefficients',/,/,
      >  (5(g18.8,','))
      >  )
-1300	format(/,'! ',a,' Coefficient uncertainties',/,/,
+ 1300 format(/,'! ',a,' Coefficient uncertainties',/,/,
      >  (5(g18.8,','))
      >  )
 
