@@ -1233,11 +1233,11 @@ C Close NTUPLE file.
 		   armSTOP_successes=shmsSTOP_successes
 		   armSTOP_trials=shmsSTOP_trials
 		endif
-		actual_generated_trials = armSTOP_trials
-		if (actual_generated_trials.gt.0) then
-		   call normalize_ntuple_weights(hbook_filename,
-     >          actual_generated_trials)
-		endif
+			actual_generated_trials = armSTOP_trials
+			if (armSTOP_successes.gt.0) then
+			   call normalize_ntuple_weights(hbook_filename,
+	     >          armSTOP_successes)
+			endif
 
 		write (chanout,1002)
 		write (chanout,1003) p_spec,th_spec*degrad
@@ -1250,7 +1250,7 @@ C Close NTUPLE file.
 		      write (chanout,1018)
 		   endif
 		endif
-		write (chanout,1019) actual_generated_trials
+			write (chanout,1019) armSTOP_successes
 
 C Indicate where particles are lost in spectrometer.
 	if(ispec.eq.2) then
@@ -1387,7 +1387,7 @@ C =============================== Format Statements ============================
  1017 format(i11,' Target good events requested',/,
      >         i11,' Good events achieved')
  1018 format('WARNING: reached max generated trials before target good events.')
- 1019 format(i11,' Actual generated trials used to normalize weight/rate_hz')
+	 1019 format(i11,' Good events used to normalize weight/rate_hz')
 
  1012 format(1x,16i4)
 
