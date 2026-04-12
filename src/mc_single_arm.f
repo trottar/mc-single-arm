@@ -30,13 +30,11 @@ c
 
 
 C Local declarations.
-      integer*4 i,
-     >          chanin /1/,
-     >          chanout /2/,
-     >          n_trials,trial,
-     >          tmp_int,
-     >          target_good_events,
-     >          actual_generated_trials
+	integer*4	i,
+     >			chanin	/1/,
+     >			chanout	/2/,
+     >			n_trials,trial,
+     >			tmp_int
 
 	integer*4 Itrial                        ! TH - add this for gfortran: forces integer type cast
 	logical*4	iss
@@ -79,12 +77,6 @@ C Event limits, topdrawer limits, physics quantities
         real *8 F1_model, F2_model
         real *8 Mp_GeV
 
-C --- Added for 3He = 2p + n construction ---
-	real*8 F1_p, F2_p
-	real*8 F1_n, F2_n
-	real*8 Z_p, A_p
-	real*8 Z_n, A_n	
-
 C --- Added: cross section (optional) absolute rate, analogous to old script ---
 	real*8 p_accept, th_accept, ph_accept
 	real*8 mott_nb, tan2, w1_model, w2_inel_model
@@ -124,12 +116,11 @@ C Circular raster
 	real*8 ax_raster, ay_raster	
 
 C Control flags (from input file)
-		integer*4 ispec
-		integer*4 p_flag			!particle identification
-		logical*4 ms_flag
-		logical*4 wcs_flag
-		logical*4 store_all
-		logical*4 use_good_target
+	integer*4 ispec
+	integer*4 p_flag			!particle identification
+	logical*4 ms_flag
+	logical*4 wcs_flag
+	logical*4 store_all
 
 c	common /hutflag/ cer_flag,vac_flag
 C Hardwired control flags.
@@ -165,13 +156,6 @@ C Function definitions.
 	save		!Remember it all!
 
 C ================================ Executable Code =============================
-
-		ms_flag = .false.
-		wcs_flag = .false.
-		store_all = .false.
-		use_good_target = .false.
-		target_good_events = 0
-		actual_generated_trials = 0
 
 C Initialize
 C using SIMC unstructured version
@@ -271,7 +255,7 @@ C Open setup file.
 
 	write(*,*)'Enter input filename (assumed to be in infiles dir)'
 	read(*,1968) rawname
- 1968 format(a)
+ 1968	format(a)
 	filename = '../infiles/'//rawname(1:last_char(rawname))//'.inp'
 	print *,filename,'opened'
 	open(unit=chanin,status='old',file=filename)
@@ -296,13 +280,13 @@ C Strip off header
 
 ! Read data lines.
 
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	iss = rd_int(str_line,n_trials)
 	if (.not.iss) stop 'ERROR (ntrials) in setup!'
 
 ! Spectrometer flag:
 	read (chanin,1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	iss = rd_int(str_line,ispec)
 	if (.not.iss) stop 'ERROR (Spectrometer selection) in setup!'
 ! Open HBOOK/NTUPLE file here
@@ -319,13 +303,13 @@ C Strip off header
 
 ! Spectrometer momentum:
 	read (chanin,1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	iss = rd_real(str_line,p_spec)
 	if (.not.iss) stop 'ERROR (Spec momentum) in setup!'
 
 ! Spectrometer angle:
 	read (chanin,1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	iss = rd_real(str_line,th_spec)
 	if (.not.iss) stop 'ERROR (Spec theta) in setup!'
 	th_spec = abs(th_spec) / degrad
@@ -335,12 +319,12 @@ C Strip off header
 ! M.C. limits (half width's for dp,th,ph, full width's for x,y,z)
 	do i=1,3
 	  read (chanin,1001) str_line
-	  write(*,*) str_line(1:last_char(str_line))
+	  write(*,*),str_line(1:last_char(str_line))
 	  iss = rd_real(str_line,gen_lim(i))
 	  if (.not.iss) stop 'ERROR (M.C. limits) in setup!'
 	  gen_lim_down(i) = gen_lim(i)
 	  read (chanin,1001) str_line
-	  write(*,*) str_line(1:last_char(str_line))
+	  write(*,*),str_line(1:last_char(str_line))
 	  iss = rd_real(str_line,gen_lim(i))
 	  if (.not.iss) stop 'ERROR (M.C. limits) in setup!'
 	  gen_lim_up(i) = gen_lim(i)
@@ -353,7 +337,7 @@ C Acceptance (constant for the run), analogous to old script
 
 	do i = 4,6
 	  read (chanin,1001) str_line
-	  write(*,*) str_line(1:last_char(str_line))
+	  write(*,*),str_line(1:last_char(str_line))
 	  iss = rd_real(str_line,gen_lim(i))
 	  if (.not.iss) stop 'ERROR (M.C. limits) in setup!'
 	enddo
@@ -361,104 +345,104 @@ C Acceptance (constant for the run), analogous to old script
 ! Raster size
 	do i=7,8
 	   read (chanin,1001) str_line
-	   write(*,*) str_line(1:last_char(str_line))
+	   write(*,*),str_line(1:last_char(str_line))
 	   iss = rd_real(str_line,gen_lim(i))
 	   if (.not.iss) stop 'ERROR (Fast Raster) in setup'
 	enddo
 
 ! Cuts on reconstructed quantities
 	read (chanin,1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	if (.not.rd_real(str_line,cut_dpp)) 
      > stop 'ERROR (CUT_DPP) in setup!'
 
 	read (chanin,1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	if (.not.rd_real(str_line,cut_dth)) 
      > stop 'ERROR (CUT_DTH) in setup!'
 
 	read (chanin,1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	if (.not.rd_real(str_line,cut_dph)) 
      > stop 'ERROR (CUT_DPH) in setup!'
 
 	read (chanin,1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	if (.not.rd_real(str_line,cut_z)) 
      > stop 'ERROR (CUT_Z) in setup!'
 
 ! Read in radiation length of target material in cm
 	read (chanin,1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	if (.not.rd_real(str_line,rad_len_cm)) 
      > stop 'ERROR (RAD_LEN_CM) in setup!'
 
 ! Beam and target offsets
 	read (chanin, 1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	iss = rd_real(str_line,xoff)
 	if(.not.iss) stop 'ERROR (xoff) in setup!'
 
 	read (chanin, 1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	iss = rd_real(str_line,yoff)
 	if(.not.iss) stop 'ERROR (yoff) in setup!'
 
 	read (chanin, 1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	iss = rd_real(str_line,zoff)
 	if(.not.iss) stop 'ERROR (zoff) in setup!'
 
 ! Spectrometer offsets
 	read (chanin, 1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	iss = rd_real(str_line,spec_xoff)
 	if(.not.iss) stop 'ERROR (spect. xoff) in setup!'
 
 	read (chanin, 1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	iss = rd_real(str_line,spec_yoff)
 	if(.not.iss) stop 'ERROR (spect. yoff) in setup!'
 
 	read (chanin, 1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	iss = rd_real(str_line,spec_zoff)
 	if(.not.iss) stop 'ERROR (spect. zoff) in setup!'
 
 	read (chanin, 1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	iss = rd_real(str_line,spec_xpoff)
 	if(.not.iss) stop 'ERROR (spect. xpoff) in setup!'
 
 	read (chanin, 1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	iss = rd_real(str_line,spec_ypoff)
 	if(.not.iss) stop 'ERROR (spect. ypoff) in setup!'
 
 ! read in flag for particle type.
 	read (chanin,1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	if (.not.rd_int(str_line,p_flag)) 
      > stop 'ERROR: p_flag in setup file!'
 
 
 ! Read in flag for multiple scattering.
 	read (chanin,1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	if (.not.rd_int(str_line,tmp_int)) 
      > stop 'ERROR: ms_flag in setup file!'
 	if (tmp_int.eq.1) ms_flag = .true.
 
 ! Read in flag for wire chamber smearing.
 	read (chanin,1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	if (.not.rd_int(str_line,tmp_int)) 
      > stop 'ERROR: wcs_flag in setup file!'
 	if (tmp_int.eq.1) wcs_flag = .true.
 
 ! Read in flag to keep all events - success or not
 	read (chanin,1001) str_line
-	write(*,*) str_line(1:last_char(str_line))
+	write(*,*),str_line(1:last_char(str_line))
 	if (.not.rd_int(str_line,tmp_int)) 
      > stop 'ERROR: store_all in setup file!'
 	if (tmp_int.eq.1) store_all = .true.
@@ -486,13 +470,13 @@ C=======================================================================
       dyptar_width = 0.d0
 	
       read (chanin,1001,end=1000,err=1000) str_line
-      write(*,*) str_line(1:last_char(str_line))
+      write(*,*),str_line(1:last_char(str_line))
       iss = rd_real(str_line,beam_energy)
 
 	
 ! Read in flag to use sieve
         read (chanin,1001,end=1000,err=1000) str_line
-        write(*,*) str_line(1:last_char(str_line))
+        write(*,*),str_line(1:last_char(str_line))
         if (.not.rd_int(str_line,tmp_int)) 
      > stop 'ERROR: use_sieve in setup file!'
         if (tmp_int.eq.1) then
@@ -503,17 +487,17 @@ C=======================================================================
 
 !     Read in flag for 'target atomic number (Z+N)' for elastic event if present
       read (chanin,1001,end=1000,err=1000) str_line
-      write(*,*) str_line(1:last_char(str_line))
+      write(*,*),str_line(1:last_char(str_line))
       iss = rd_real(str_line,tar_atom_num)
 
 !     Read in beam energy (GeV) for F1F2IN21 model (optional, <=0 disables call)
       read (chanin,1001,end=1000,err=1000) str_line
-      write(*,*) str_line(1:last_char(str_line))
+      write(*,*),str_line(1:last_char(str_line))
       iss = rd_real(str_line,ebeam_model)
 
 !     Read in target charge Z for F1F2IN21 model (optional)
       read (chanin,1001,end=1000,err=1000) str_line
-      write(*,*) str_line(1:last_char(str_line))
+      write(*,*),str_line(1:last_char(str_line))
       iss = rd_real(str_line,Z_tar)
 
 
@@ -525,51 +509,33 @@ C=======================================================================
 !     ("Multiple scattering type" and "Enegy Loss"). If present,
 !     skip them before reading luminosity inputs.
       read (chanin,1001,end=1000,err=1000) str_line
-      write(*,*) str_line(1:last_char(str_line))
+      write(*,*),str_line(1:last_char(str_line))
       if (index(str_line,'Multiple scattering type').gt.0 .or.
      >    index(str_line,'Enegy Loss').gt.0) then
         read (chanin,1001,end=1000,err=1000) str_line
-        write(*,*) str_line(1:last_char(str_line))
+        write(*,*),str_line(1:last_char(str_line))
 
         read (chanin,1001,end=1000,err=1000) str_line
-        write(*,*) str_line(1:last_char(str_line))
+        write(*,*),str_line(1:last_char(str_line))
       endif
       iss = rd_real(str_line,beam_current_uA)
 
-	      if (iss) then
-	        read (chanin,1001,end=1000,err=1000) str_line
-	        write(*,*) str_line(1:last_char(str_line))
-	        iss = rd_real(str_line,target_dens_m3)
-	      endif
+      if (iss) then
+        read (chanin,1001,end=1000,err=1000) str_line
+        write(*,*),str_line(1:last_char(str_line))
+        iss = rd_real(str_line,target_dens_m3)
+      endif
 
-	      read (chanin,1001,end=1000,err=1000) str_line
-	      if (last_char(str_line).gt.0) then
-	         write(*,*) str_line(1:last_char(str_line))
-	      endif
-	      if (rd_int(str_line,target_good_events)) then
-	         if (target_good_events.gt.0) then
-	            use_good_target = .true.
-	         else
-	            target_good_events = 0
-	         endif
-	      else
-	         target_good_events = 0
-	      endif
-
- 1000 continue
+ 1000  continue
       Mp_GeV = 0.93827208d0
 
 
 	print *, 'ebeam_model=', ebeam_model
 	print *, 'beam_energy=', beam_energy
-		print *, 'Z_tar=', Z_tar
-		print *, 'tar_atom_num=', tar_atom_num
-		print *, 'beam_current_uA=', beam_current_uA
-		print *, 'target_dens_m3=', target_dens_m3
-		if (use_good_target) then
-		   print *, 'target_good_events=', target_good_events
-		   print *, 'max_generated_trials=', n_trials
-		endif
+	print *, 'Z_tar=', Z_tar
+	print *, 'tar_atom_num=', tar_atom_num
+	print *, 'beam_current_uA=', beam_current_uA
+	print *, 'target_dens_m3=', target_dens_m3
 C	pause
 
 	
@@ -603,15 +569,13 @@ C------------------------------------------------------------------------------C
 C DJG - If you want to use default (fixed) seed, comment out the line below
           call sgrnd(itime)
 
-      do Itrial = 1,n_trials
-         if(ispec.eq.1) then
-            armSTOP_successes=hSTOP_successes
-         elseif(ispec.eq.2) then
-            armSTOP_successes=shmsSTOP_successes
-         endif
-         if (use_good_target.and.
-     >        armSTOP_successes.ge.target_good_events) goto 600
-         if(mod(Itrial,200000).eq.0) write(*,*)'event #: ',
+	do Itrial = 1,n_trials
+	   if(ispec.eq.1) then
+	      armSTOP_successes=hSTOP_successes
+	   elseif(ispec.eq.2) then
+	      armSTOP_successes=shmsSTOP_successes
+	   endif
+	  if(mod(Itrial,200000).eq.0) write(*,*)'event #: ',
      >Itrial,'       successes: ',armSTOP_successes
 
 
@@ -799,21 +763,6 @@ C Calculate multiple scattering length of target
 	  th_ev = acos(cos_ev)
 	  sin_ev = sin(th_ev)
 	  
-C Initialize F1F2IN21-derived quantities for this event
-      Eprime       = 0.d0
-      Q2_model     = -1.d0
-      W2_model     = -1.d0
-      nu_model     = -1.d0
-      W_model      = -1.d0
-      xbj_model    = -1.d0
-      theta_model  = -1.d0
-      F1_model     = 0.d0
-      F2_model     = 0.d0
-      mott_nb      = 0.d0
-      sigma_f1f2   = 0.d0
-      sigma_weight = 0.d0
-      rate_f1f2    = 0.d0
-
 C Inclusive structure-function model (F1F2IN21) for acceptance weighting
       if (ebeam_model.gt.0.d0) then
          Eprime = p_spec*(1.d0 + dpp_init/100.d0)/1000.d0
@@ -853,46 +802,14 @@ C Inclusive structure-function model (F1F2IN21) for acceptance weighting
 	   F2_model = 0.d0
 	endif
 	 
-      if (Q2_model.gt.0.d0 .and. W2_model.gt.0.d0 .and.
-     >    theta_model.gt.0.d0) then
-
-C        Special handling for 3He only: 3He = 2p + n
-         if (tar_atom_num.eq.3.d0 .and. Z_tar.eq.2.d0) then
-
-C           Define proton/neutron A,Z using the same type as model inputs
-            Z_p = 1.d0
-            A_p = 1.d0
-            Z_n = 0.d0
-            A_n = 1.d0
-
-C           Free proton
-            call F1F2IN21(Z_p,A_p,Q2_model,W2_model,F1_p,F2_p)
-
-C           Free neutron
-            call F1F2IN21(Z_n,A_n,Q2_model,W2_model,F1_n,F2_n)
-
-C           3He = 2p + n
-            F1_model = 2.d0*F1_p + F1_n
-            F2_model = 2.d0*F2_p + F2_n
-
-         else
-
-C           Default behavior for all other targets
-            call F1F2IN21(Z_tar,tar_atom_num,Q2_model,W2_model,
-     >                    F1_model,F2_model)
-
-         endif
-
-      else
-
-         F1_p     = 0.d0
-         F2_p     = 0.d0
-         F1_n     = 0.d0
-         F2_n     = 0.d0
-         F1_model = 0.d0
-         F2_model = 0.d0
-
-      endif
+	if (Q2_model.gt.0.d0 .and. W2_model.gt.0.d0) then
+	   call F1F2IN21(Z_tar,tar_atom_num,Q2_model,W2_model,
+     >          F1_model,F2_model)
+	else
+	   F1_model = 0.d0
+	   F2_model = 0.d0
+	endif
+	 
 
 C --- Cross section and (optional) absolute rate (analogous to old block) ---
        mott_nb      = 0.d0
@@ -948,13 +865,13 @@ C If the generator throws from [-lim,+lim], then full width = 2*lim.
 		     dxptar_width = th_accept
 		     dyptar_width = ph_accept
 
-C Raw cross section weight numerator in nb.
-C Normalize after the run once the actual generated-trial count is known.
+C Per-trial cross section weight in nb
 		     sigma_weight = sigma_f1f2 *
      >                              jac_E_delta *
      >                              jac_xpy *
      >                              ddelta_width *
-     >                              dxptar_width * dyptar_width
+     >                              dxptar_width * dyptar_width /
+     >                              n_trials
 C       Optional absolute rate (Hz): requires target_dens_m3 and beam_current_uA
              if (beam_current_uA.gt.0.d0 .and. target_dens_m3.gt.0.d0
      >           .and. gen_lim(6).ne.0.d0) then
@@ -963,9 +880,9 @@ C       --- after sigma_weight is computed (still in nb * phase-space) ---
 		n_areal_m2 = target_dens_m3 * targ_len_m ! (#/m^3)*m = #/m^2
 		lumi_per_C   = n_areal_m2 / echarge_uC ! 1/(m^2*uC)
 
-C       convert nb -> m^2 and keep the raw numerator.
-			sigma_weight = sigma_weight * nb_to_m2 * lumi_per_C
-			rate_f1f2 = sigma_weight * target_dens_m3 * nb_to_m2
+C       convert nb -> m^2 and normalize by charge contribution
+		sigma_weight = sigma_weight * nb_to_m2 * lumi_per_C
+		rate_f1f2 = sigma_weight * target_dens_m3 * nb_to_m2
      >                     * (beam_current_uA*1.d-6)
      >                     * targ_len_m / (echarge)
              endif
@@ -1092,8 +1009,8 @@ C       RLT: To keep RHCS consistency with HCANA, SHMS ztar must pick up minus s
             ytar_recon = y_s
 
 C Compute sums for calculating reconstruction variances.
-		    dpp_var(1) = dpp_var(1) + (dpp_recon - dpp_init)
-		    dth_var(1) = dth_var(1) + (dth_recon - dth_init)
+	    dpp_var(1) = dpp_var(1) + (dpp_recon - dpp_init)
+	    dth_var(1) = dth_var(1) + (dth_recon - dth_init)
 	    dph_var(1) = dph_var(1) + (dph_recon - dph_init)
 	    ztg_var(1) = ztg_var(1) + (ztar_recon - ztar_init)
 
@@ -1210,11 +1127,9 @@ C for spectrometer ntuples
 C We are done with this event, whether GOOD or BAD.
 C Loop for remainder of trials.
 
- 500  continue
+500	  continue
 
-      enddo                           !End of M.C. loop
-
- 600  continue
+	enddo				!End of M.C. loop
 
 C------------------------------------------------------------------------------C
 C                           End of Monte-Carlo loop                            C
@@ -1222,35 +1137,23 @@ C------------------------------------------------------------------------------C
 
 C Close NTUPLE file.
 
-		close(NtupleIO)
-		if (spec_ntuple) close(SPecNtupleIO)
+	close(NtupleIO)
+	if (spec_ntuple) close(SPecNtupleIO)
 
 
-		if(ispec.eq.1) then
-		   armSTOP_successes=hSTOP_successes
-		   armSTOP_trials=hSTOP_trials
-		elseif(ispec.eq.2) then
-		   armSTOP_successes=shmsSTOP_successes
-		   armSTOP_trials=shmsSTOP_trials
-		endif
-      actual_generated_trials = armSTOP_trials
-      if (actual_generated_trials.gt.0) then
-         call normalize_ntuple_weights(hbook_filename,
-     >        actual_generated_trials + armSTOP_successes)
-      endif
-
-		write (chanout,1002)
-		write (chanout,1003) p_spec,th_spec*degrad
+	write (chanout,1002)
+	write (chanout,1003) p_spec,th_spec*degrad
         write (chanout,1004) (gen_lim(i),i=1,6)
 
-			write (chanout,1005) n_trials,actual_generated_trials
-			if (use_good_target) then
-		   write (chanout,1017) target_good_events,armSTOP_successes
-		   if (armSTOP_successes.lt.target_good_events) then
-		      write (chanout,1018)
-		   endif
-		endif
-      write (chanout,1019) actual_generated_trials + armSTOP_successes
+	write (chanout,1005) n_trials
+
+	if(ispec.eq.1) then
+	   armSTOP_successes=hSTOP_successes
+	   armSTOP_trials=hSTOP_trials
+	elseif(ispec.eq.2) then
+	   armSTOP_successes=shmsSTOP_successes
+	   armSTOP_trials=shmsSTOP_trials
+	endif
 
 C Indicate where particles are lost in spectrometer.
 	if(ispec.eq.2) then
@@ -1311,15 +1214,9 @@ C Compute reconstruction resolutions.
      >		t2,dph_var(1)/armSTOP_successes,t3,
      > ztg_var(1)/armSTOP_successes,t4
 
-		write(6,*) armSTOP_trials,' Trials',armSTOP_successes
+	write(6,*) armSTOP_trials,' Trials',armSTOP_successes
      > ,' Successes'
-		if (use_good_target) then
-		   write (6,1017) target_good_events,armSTOP_successes
-		   if (armSTOP_successes.lt.target_good_events) then
-		      write (6,1018)
-		   endif
-		endif
-		write (6,1011) dpp_var(1)/armSTOP_successes,t1,
+	write (6,1011) dpp_var(1)/armSTOP_successes,t1,
      > dth_var(1)/armSTOP_successes,
      >		t2,dph_var(1)/armSTOP_successes,t3,
      > ztg_var(1)/armSTOP_successes,t4
@@ -1330,13 +1227,13 @@ C ALL done!
 
 C =============================== Format Statements ============================
 
- 1001 format(a)
- 1002 format('!',/,'! Uniform illumination Monte-Carlo results')
- 1003 format('!',/'! Spectrometer setting:',/,'!',/,
-     > g11.5,' =  P  spect (MeV)',/,
-     > g11.5,' =  TH spect (deg)')
+1001	format(a)
+1002	format('!',/,'! Uniform illumination Monte-Carlo results')
+1003	format('!',/'! Spectrometer setting:',/,'!',/,
+     >g11.5,' =  P  spect (MeV)',/,
+     >g11.5,' =  TH spect (deg)')
 
- 1004 format('!',/'! Monte-Carlo limits:',/,'!',/,
+1004	format('!',/'! Monte-Carlo limits:',/,'!',/,
      >  g11.5,'= GEN_LIM(1) - DP/P   (half width,% )',/,
      >  g11.5,'= GEN_LIM(2) - Theta  (half width,mr)',/,
      >  g11.5,'= GEN_LIM(3) - Phi    (half width,mr)',/,
@@ -1348,11 +1245,11 @@ C =============================== Format Statements ============================
 !inp     >	g18.8,' =  Hor. 1/2 gap size (cm)',/,
 !inp     >	g18.8,' =  Vert. 1/2 gap size (cm)')
 
- 1005 format('!',/,'! Summary:',/,'!',/,
-     >  i11,' Monte-Carlo trial limit:',/,
-     >  i11,' Monte-Carlo trials generated:')
+1005	format('!',/,'! Summary:',/,'!',/,
+!     >	i,' Monte-Carlo trials:')
+     >  i11,' Monte-Carlo trials:')
 
- 1006 format(i11,' Initial Trials',/
+1006	format(i11,' Initial Trials',/
      >  i11,' Trials made it to the hut',/
      >  i11,' Trial cut in dc1',/
      >  i11,' Trial cut in dc2',/
@@ -1364,7 +1261,7 @@ C =============================== Format Statements ============================
      >  i11,' Trials passed all cuts and were histogrammed.',/
      >  )
 
- 1007 format(i11,' Initial Trials',/
+ 1007	format(i11,' Initial Trials',/
      >  i11,' Trials made it to the hut',/
      >  i11,' Trial cut in dc1',/
      >  i11,' Trial cut in dc2',/
@@ -1378,20 +1275,15 @@ C =============================== Format Statements ============================
 !1008	format(8i)
 !1009	format(1x,i4,g,i)
 !1010	format(a,i)
- 1011 format(
+1011	format(
      >  'DPP ave error, resolution = ',2g18.8,' %',/,
      >  'DTH ave error, resolution = ',2g18.8,' mr',/,
      >  'DPH ave error, resolution = ',2g18.8,' mr',/,
      >  'ZTG ave error, resolution = ',2g18.8,' cm')
 
- 1017 format(i11,' Target good events requested',/,
-     >         i11,' Good events achieved')
- 1018 format('WARNING: reached max generated trials before target good events.')
- 1019 format(i11,' Generated trials + successes used to normalize weight/rate_hz')
+1012	format(1x,16i4)
 
- 1012 format(1x,16i4)
-
- 1015 format(/,
+1015	format(/,
      >     i11,' stopped in the TARG APERT HOR',/
      >     i11,' stopped in the TARG APERT VERT',/
      >     i11,' stopped in the TARG APERT OCTAGON',/
@@ -1461,93 +1353,12 @@ C =============================== Format Statements ============================
      >     i11,' stopped in Vacuum Pipe Plane-4 (id=35)',/
      >     )
 
- 1100 format('!',79('-'),/,'! ',a,/,'!')
- 1200 format(/,'! ',a,' Coefficients',/,/,
+1100	format('!',79('-'),/,'! ',a,/,'!')
+1200	format(/,'! ',a,' Coefficients',/,/,
      >  (5(g18.8,','))
      >  )
- 1300 format(/,'! ',a,' Coefficient uncertainties',/,/,
+1300	format(/,'! ',a,' Coefficient uncertainties',/,/,
      >  (5(g18.8,','))
      >  )
 
-      end
-      subroutine normalize_ntuple_weights(filename,norm_trials)
-      implicit none
-      character*(*) filename
-      integer*4 norm_trials
-      integer*4 io_in,io_out,check,i,weight_idx,rate_idx
-      integer*4 nvars
-      integer*4 last_char
-      real*8 ntup(80),norm_d
-      character*16 nt_names(80)
-      character*132 tmpfile
-      character*300 cmd
-
-      if (norm_trials.le.0) return
-
-      io_in = 91
-      io_out = 92
-      weight_idx = 0
-      rate_idx = 0
-      norm_d = dble(norm_trials)
-
-      tmpfile = filename(1:last_char(filename))//'.normtmp'
-
-      open(io_in,file=filename,status='old',form='unformatted',
-     >     access='sequential',iostat=check)
-      if (check.ne.0) then
-         write(6,*) 'WARNING: could not reopen ntuple file for',
-     >        ' normalization: ',filename(1:last_char(filename))
-         return
-      endif
-
-      open(io_out,file=tmpfile,status='unknown',form='unformatted',
-     >     access='sequential',iostat=check)
-      if (check.ne.0) then
-         write(6,*) 'WARNING: could not open temp ntuple file for',
-     >        ' normalization: ',tmpfile(1:last_char(tmpfile))
-         close(io_in)
-         return
-      endif
-
-      read(io_in,iostat=check) nvars
-      if (check.ne.0) goto 900
-      write(io_out) nvars
-
-      do i=1,nvars
-         read(io_in,iostat=check) nt_names(i)
-         if (check.ne.0) goto 900
-         if (nt_names(i).eq.'weight') weight_idx = i
-         if (nt_names(i).eq.'rate_hz') rate_idx = i
-         write(io_out) nt_names(i)
-      enddo
-
- 100  continue
-      do i=1,nvars
-         read(io_in,iostat=check) ntup(i)
-         if (check.lt.0) goto 200
-         if (check.ne.0) goto 900
-      enddo
-
-      if (weight_idx.gt.0) ntup(weight_idx) = ntup(weight_idx)/norm_d
-      if (rate_idx.gt.0) ntup(rate_idx) = ntup(rate_idx)/norm_d
-
-      do i=1,nvars
-         write(io_out) ntup(i)
-      enddo
-      goto 100
-
- 200  continue
-      close(io_in)
-      close(io_out)
-      cmd = 'mv -f ' // tmpfile(1:last_char(tmpfile)) // ' ' //
-     >      filename(1:last_char(filename))
-      call system(cmd(1:last_char(cmd)))
-      return
-
- 900  continue
-      write(6,*) 'WARNING: failed to normalize ntuple weights for ',
-     >     filename(1:last_char(filename))
-      close(io_in)
-      close(io_out,status='delete')
-      return
-      end
+	end

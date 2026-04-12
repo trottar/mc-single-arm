@@ -1,7 +1,7 @@
 !------------------------------------------------------------------------------
 ! Input file for MC_SINGLE_ARM
 !------------------------------------------------------------------------------
-  10000000	Monte-Carlo trials
+   2000000	Monte-Carlo trials
       1         Spectrometer (1=HMS, 2=SHMS, 3=..)
      2900.      Spectrometer momentum (in MeV/c)
      30.0       Spectrometer angle (in degrees)
@@ -40,6 +40,5 @@
      2          target charge Z (for F1F2IN21)     
      0          Multiple scattering type (1= Highland, 0=Highland w tail)
      1          Enegy Loss (1=On)
-   30.0      Beam current (uA) for rate calculation (30 mA)
-   2.75E26      3He target number density (#/m^3) (10.24 amg table 4.4 Mingyu Thesis, BigBrother)
-   1000000      Target good events (optional)
+   30000.0      Beam current (uA) for luminosity weight (30 mA)
+ 3.48E26      3He target number density (#/m^3)
