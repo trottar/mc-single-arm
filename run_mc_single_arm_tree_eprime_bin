@@ -1,4 +1,24 @@
 #!/usr/bin/env bash
+
+if ! command -v module >/dev/null 2>&1; then
+  for module_init in /etc/profile.d/modules.sh /usr/share/Modules/init/bash /usr/share/lmod/lmod/init/bash; do
+    if [[ -f "$module_init" ]]; then
+      # shellcheck source=/dev/null
+      source "$module_init"
+      break
+    fi
+  done
+fi
+
+if ! command -v module >/dev/null 2>&1; then
+  echo "ERROR: environment modules command is unavailable." >&2
+  exit 1
+fi
+
+module purge
+module use /cvmfs/oasis.opensciencegrid.org/jlab/scicomp/sw/el9/modulefiles
+module load root/6.30.04-gcc11.4.0
+
 set -euo pipefail
 
 TARGET_GOOD_EVENTS=1000000
@@ -62,14 +82,6 @@ for d in runout worksim outfiles; do
     mkdir -p "$d"
   fi
 done
-
-if command -v module >/dev/null 2>&1; then
-  if ! module purge || \
-     ! module use /cvmfs/oasis.opensciencegrid.org/jlab/scicomp/sw/el9/modulefiles || \
-     ! module load root/6.30.04-gcc11.4.0; then
-    echo "WARNING: could not initialize ROOT module; assuming environment is pre-configured." >&2
-  fi
-fi
 
 build_once() {
   (cd src && make clean && make)
