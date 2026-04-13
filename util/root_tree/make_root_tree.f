@@ -57,5 +57,3 @@ c now loop over events
       call RootNTOutp();
 
       end
-
-

@@ -99,5 +99,3 @@ c now loop over events
       enddo ! loop over events
 
       end
-
-

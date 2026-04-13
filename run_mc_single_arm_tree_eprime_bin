@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+TARGET_GOOD_EVENTS=1000000
+CHUNK_TRIALS=2000000
+MAX_CHUNKS=500
+
+usage() {
+  cat <<USAGE
+Usage: $0 <kin> <bin_index>
+
+Run MC for one E' bin at a time and accumulate until ${TARGET_GOOD_EVENTS} good events.
+
+Arguments:
+  kin        One of: kin3_hms, kin4_hms, kinB_shms, kinC_shms
+  bin_index  Zero-based E' bin index
+
+Environment overrides:
+  TARGET_GOOD_EVENTS  (default: ${TARGET_GOOD_EVENTS})
+  CHUNK_TRIALS        (default: ${CHUNK_TRIALS})
+  MAX_CHUNKS          (default: ${MAX_CHUNKS})
+USAGE
+}
+
+if [[ ${1:-} == "-h" || ${1:-} == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+if [[ $# -ne 2 ]]; then
+  usage
+  exit 1
+fi
+
+kin="$1"
+bin_index="$2"
+
+if ! [[ "$bin_index" =~ ^[0-9]+$ ]]; then
+  echo "ERROR: bin_index must be a non-negative integer." >&2
+  exit 2
+fi
+
+case "$kin" in
+  kin3_hms|kin4_hms|kinB_shms|kinC_shms) ;;
+  *)
+    echo "ERROR: kin must be one of kin3_hms, kin4_hms, kinB_shms, kinC_shms." >&2
+    exit 2
+    ;;
+esac
+
+TARGET_GOOD_EVENTS="${TARGET_GOOD_EVENTS:-1000000}"
+CHUNK_TRIALS="${CHUNK_TRIALS:-2000000}"
+MAX_CHUNKS="${MAX_CHUNKS:-500}"
+
+if ! [[ "$TARGET_GOOD_EVENTS" =~ ^[0-9]+$ && "$CHUNK_TRIALS" =~ ^[0-9]+$ && "$MAX_CHUNKS" =~ ^[0-9]+$ ]]; then
+  echo "ERROR: TARGET_GOOD_EVENTS, CHUNK_TRIALS, and MAX_CHUNKS must be integers." >&2
+  exit 2
+fi
+
+for d in runout worksim outfiles; do
+  if [[ ! -e "$d" ]]; then
+    mkdir -p "$d"
+  fi
+done
+
+if command -v module >/dev/null 2>&1; then
+  if ! module purge || \
+     ! module use /cvmfs/oasis.opensciencegrid.org/jlab/scicomp/sw/el9/modulefiles || \
+     ! module load root/6.30.04-gcc11.4.0; then
+    echo "WARNING: could not initialize ROOT module; assuming environment is pre-configured." >&2
+  fi
+fi
+
+build_once() {
+  (cd src && make clean && make)
+  (cd util/root_tree && make clean && make)
+}
+
+resolve_bin() {
+  local kin_name="$1"
+  local idx="$2"
+  local p_spec_mev="$3"
+
+  python3 - "$kin_name" "$idx" "$p_spec_mev" <<'PY'
+import sys
+kin = sys.argv[1]
+idx = int(sys.argv[2])
+p_spec_mev = float(sys.argv[3])
+p_spec_gev = p_spec_mev / 1000.0
+
+edges_by_kin = {
+    "kinC_shms": [2.09,2.11,2.13,2.15,2.17,2.19,2.21,2.23,2.25,2.27,2.29,2.31,2.33,2.35,2.37,2.39,2.41,2.43,2.45,2.47,2.49,2.51,2.53,2.55,2.57,2.59,2.61,2.63,2.65,2.67,2.69,2.71,2.73,2.75,2.77,2.79,2.81,2.83,2.85,2.87,2.89,2.91,2.93,2.95,2.97,2.99,3.01,3.03,3.05,3.07,3.09,3.11,3.13,3.15,3.17,3.19,3.21,3.23,3.25,3.27,3.29,3.31,3.33,3.35,3.37,3.39,3.41,3.43,3.45,3.47,3.49,3.51],
+    "kinB_shms": [2.79,2.81,2.83,2.85,2.87,2.89,2.91,2.93,2.95,2.97,2.99,3.01,3.03,3.05,3.07,3.09,3.11,3.13,3.15,3.17,3.19,3.21,3.23,3.25,3.27,3.29,3.31,3.33,3.35,3.37,3.39,3.41,3.43,3.45,3.47,3.49,3.51,3.53,3.55,3.57,3.59,3.61,3.63,3.65,3.67,3.69,3.71,3.73,3.75,3.77,3.79,3.81,3.83,3.85,3.87,3.89,3.91,3.93,3.95,3.97,3.99,4.01,4.03,4.05,4.07,4.09,4.11,4.13,4.15,4.17,4.19,4.21],
+    "kin3_hms": [2.39,2.41,2.43,2.45,2.47,2.49,2.51,2.53,2.55,2.57,2.59,2.61,2.63,2.65,2.67,2.69,2.71,2.73,2.75,2.77,2.79,2.81,2.83,2.85,2.87,2.89,2.91,2.93,2.95,2.97,2.99,3.01,3.03,3.05,3.07,3.09,3.11,3.13,3.15,3.17,3.19,3.21],
+    "kin4_hms": [3.09,3.11,3.13,3.15,3.17,3.19,3.21,3.23,3.25,3.27,3.29,3.31,3.33,3.35,3.37,3.39,3.41,3.43,3.45,3.47,3.49,3.51,3.53,3.55,3.57,3.59,3.61,3.63,3.65,3.67,3.69,3.71,3.73,3.75,3.77,3.79,3.81,3.83,3.85,3.87,3.89,3.91],
+}
+
+edges = edges_by_kin[kin]
+nbins = len(edges)-1
+if idx < 0 or idx >= nbins:
+    print(f"ERROR: bin_index {idx} out of range [0, {nbins-1}] for {kin}.", file=sys.stderr)
+    sys.exit(3)
+
+emin = edges[idx]
+emax = edges[idx+1]
+dpp_min = (emin / p_spec_gev - 1.0) * 100.0
+dpp_max = (emax / p_spec_gev - 1.0) * 100.0
+print(f"{emin} {emax} {dpp_min} {dpp_max} {nbins}")
+PY
+}
+
+input_file="infiles/${kin}.inp"
+if [[ ! -f "$input_file" ]]; then
+  echo "ERROR: missing input file $input_file" >&2
+  exit 3
+fi
+
+read -r p_spec_mev < <(awk 'NR==6{print $1}' "$input_file")
+if [[ -z "$p_spec_mev" ]]; then
+  echo "ERROR: failed to read spectrometer momentum from $input_file" >&2
+  exit 3
+fi
+
+read -r eprime_min eprime_max dpp_min dpp_max nbins < <(resolve_bin "$kin" "$bin_index" "$p_spec_mev")
+
+printf 'Resolved setup:\n'
+printf '  kin: %s\n' "$kin"
+printf '  input: %s\n' "$input_file"
+printf '  p_spec: %s MeV/c\n' "$p_spec_mev"
+printf '  bin_index: %s / %s\n' "$bin_index" "$((nbins-1))"
+printf "  E' range: [%s, %s] GeV\n" "$eprime_min" "$eprime_max"
+printf '  dpp range: [%.8f, %.8f] %%\n' "$dpp_min" "$dpp_max"
+printf '  target good events: %s\n' "$TARGET_GOOD_EVENTS"
+printf '  trials per chunk: %s\n' "$CHUNK_TRIALS"
+
+base_tag="${kin}_bin$(printf '%03d' "$bin_index")"
+combined_root="outfiles/${base_tag}.root"
+rm -f "$combined_root"
+
+build_once
+
+good_total=0
+chunk=0
+root_parts=()
+
+while (( good_total < TARGET_GOOD_EVENTS )); do
+  ((chunk+=1))
+  if (( chunk > MAX_CHUNKS )); then
+    echo "ERROR: reached MAX_CHUNKS=${MAX_CHUNKS} before hitting target good events." >&2
+    exit 4
+  fi
+
+  run_tag="${base_tag}_part$(printf '%04d' "$chunk")"
+  temp_input="infiles/${run_tag}.inp"
+  log_file="runout/${run_tag}.out"
+
+  awk -v ntrials="$CHUNK_TRIALS" -v dmin="$dpp_min" -v dmax="$dpp_max" '
+    NR==4 {$1=ntrials; print; next}
+    NR==8 {$1=sprintf("%.10f", dmin); print; next}
+    NR==9 {$1=sprintf("%.10f", dmax); print; next}
+    {print}
+  ' "$input_file" > "$temp_input"
+
+  (
+    cd src
+    ./mc_single_arm <<EOF2 |& tee "../${log_file}"
+${run_tag}
+EOF2
+  )
+
+  successes=$(awk '/ Trials[[:space:]]+[0-9]+/{g=$NF} END{if(g=="") g=0; print g}' "$log_file")
+  if ! [[ "$successes" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: failed to parse good-event count from ${log_file}." >&2
+    rm -f "$temp_input"
+    exit 5
+  fi
+
+  (
+    cd util/root_tree
+    ./make_root_tree <<EOF3
+${run_tag}
+EOF3
+  )
+
+  part_root="worksim/${run_tag}.root"
+  if [[ ! -f "$part_root" ]]; then
+    echo "ERROR: missing expected ROOT output $part_root" >&2
+    rm -f "$temp_input"
+    exit 5
+  fi
+
+  root_parts+=("$part_root")
+  good_total=$((good_total + successes))
+  printf 'Chunk %d: good=%d, cumulative_good=%d\n' "$chunk" "$successes" "$good_total"
+
+  rm -f "worksim/${run_tag}.bin" "$temp_input"
+done
+
+hadd -f "$combined_root" "${root_parts[@]}"
+
+for part in "${root_parts[@]}"; do
+  rm -f "$part"
+done
+
+echo "Done: wrote ${combined_root} with cumulative good events >= ${TARGET_GOOD_EVENTS}"
