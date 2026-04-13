@@ -168,7 +168,12 @@ ${run_tag}
 EOF2
   )
 
-  successes=$(awk '/ Trials[[:space:]]+[0-9]+/{g=$NF} END{if(g=="") g=0; print g}' "$log_file")
+  successes=$(
+    awk '
+      /Trials/ && /Successes/ && $NF=="Successes" && $(NF-1) ~ /^[0-9]+$/ {g=$(NF-1)}
+      END {if (g != "") print g}
+    ' "$log_file"
+  )
   if ! [[ "$successes" =~ ^[0-9]+$ ]]; then
     echo "ERROR: failed to parse good-event count from ${log_file}." >&2
     rm -f "$temp_input"
