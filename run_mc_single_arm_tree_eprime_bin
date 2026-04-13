@@ -21,24 +21,17 @@ module load root/6.30.04-gcc11.4.0
 
 set -euo pipefail
 
-TARGET_GOOD_EVENTS=1000000
-CHUNK_TRIALS=2000000
-MAX_CHUNKS=500
-
 usage() {
   cat <<USAGE
 Usage: $0 <kin> <bin_index>
 
-Run MC for one E' bin at a time and accumulate until ${TARGET_GOOD_EVENTS} good events.
+Run MC for one E' bin at a time using the trial limit and target good-event
+settings already stored in the kin input file.
 
 Arguments:
   kin        One of: kin3_hms, kin4_hms, kinB_shms, kinC_shms
   bin_index  Zero-based E' bin index
 
-Environment overrides:
-  TARGET_GOOD_EVENTS  (default: ${TARGET_GOOD_EVENTS})
-  CHUNK_TRIALS        (default: ${CHUNK_TRIALS})
-  MAX_CHUNKS          (default: ${MAX_CHUNKS})
 USAGE
 }
 
@@ -67,15 +60,6 @@ case "$kin" in
     exit 2
     ;;
 esac
-
-TARGET_GOOD_EVENTS="${TARGET_GOOD_EVENTS:-1000000}"
-CHUNK_TRIALS="${CHUNK_TRIALS:-2000000}"
-MAX_CHUNKS="${MAX_CHUNKS:-500}"
-
-if ! [[ "$TARGET_GOOD_EVENTS" =~ ^[0-9]+$ && "$CHUNK_TRIALS" =~ ^[0-9]+$ && "$MAX_CHUNKS" =~ ^[0-9]+$ ]]; then
-  echo "ERROR: TARGET_GOOD_EVENTS, CHUNK_TRIALS, and MAX_CHUNKS must be integers." >&2
-  exit 2
-fi
 
 for d in runout worksim outfiles; do
   if [[ ! -e "$d" ]]; then
@@ -142,81 +126,44 @@ printf '  p_spec: %s MeV/c\n' "$p_spec_mev"
 printf '  bin_index: %s / %s\n' "$bin_index" "$((nbins-1))"
 printf "  E' range: [%s, %s] GeV\n" "$eprime_min" "$eprime_max"
 printf '  dpp range: [%.8f, %.8f] %%\n' "$dpp_min" "$dpp_max"
-printf '  target good events: %s\n' "$TARGET_GOOD_EVENTS"
-printf '  trials per chunk: %s\n' "$CHUNK_TRIALS"
+printf '  MC settings: copied from %s\n' "$input_file"
 
 base_tag="${kin}_bin$(printf '%03d' "$bin_index")"
-combined_root="outfiles/${base_tag}.root"
-rm -f "$combined_root"
+temp_input="infiles/${base_tag}.inp"
+log_file="runout/${base_tag}.out"
+work_root="worksim/${base_tag}.root"
+final_root="outfiles/${base_tag}.root"
 
 build_once
 
-good_total=0
-chunk=0
-root_parts=()
+awk -v dmin="$dpp_min" -v dmax="$dpp_max" '
+  NR==8 {$1=sprintf("%.10f", dmin); print; next}
+  NR==9 {$1=sprintf("%.10f", dmax); print; next}
+  {print}
+' "$input_file" > "$temp_input"
 
-while (( good_total < TARGET_GOOD_EVENTS )); do
-  ((chunk+=1))
-  if (( chunk > MAX_CHUNKS )); then
-    echo "ERROR: reached MAX_CHUNKS=${MAX_CHUNKS} before hitting target good events." >&2
-    exit 4
-  fi
-
-  run_tag="${base_tag}_part$(printf '%04d' "$chunk")"
-  temp_input="infiles/${run_tag}.inp"
-  log_file="runout/${run_tag}.out"
-
-  awk -v ntrials="$CHUNK_TRIALS" -v dmin="$dpp_min" -v dmax="$dpp_max" '
-    NR==4 {$1=ntrials; print; next}
-    NR==8 {$1=sprintf("%.10f", dmin); print; next}
-    NR==9 {$1=sprintf("%.10f", dmax); print; next}
-    {print}
-  ' "$input_file" > "$temp_input"
-
-  (
-    cd src
-    ./mc_single_arm <<EOF2 |& tee "../${log_file}"
-${run_tag}
+(
+  cd src
+  ./mc_single_arm <<EOF2 |& tee "../${log_file}"
+${base_tag}
 EOF2
-  )
+)
 
-  successes=$(
-    awk '
-      /Trials/ && /Successes/ && $NF=="Successes" && $(NF-1) ~ /^[0-9]+$/ {g=$(NF-1)}
-      END {if (g != "") print g}
-    ' "$log_file"
-  )
-  if ! [[ "$successes" =~ ^[0-9]+$ ]]; then
-    echo "ERROR: failed to parse good-event count from ${log_file}." >&2
-    rm -f "$temp_input"
-    exit 5
-  fi
-
-  (
-    cd util/root_tree
-    ./make_root_tree <<EOF3
-${run_tag}
+(
+  cd util/root_tree
+  ./make_root_tree <<EOF3
+${base_tag}
 EOF3
-  )
+)
 
-  part_root="worksim/${run_tag}.root"
-  if [[ ! -f "$part_root" ]]; then
-    echo "ERROR: missing expected ROOT output $part_root" >&2
-    rm -f "$temp_input"
-    exit 5
-  fi
+if [[ ! -f "$work_root" ]]; then
+  echo "ERROR: missing expected ROOT output $work_root" >&2
+  rm -f "$temp_input"
+  exit 5
+fi
 
-  root_parts+=("$part_root")
-  good_total=$((good_total + successes))
-  printf 'Chunk %d: good=%d, cumulative_good=%d\n' "$chunk" "$successes" "$good_total"
+rm -f "$final_root"
+mv -f "$work_root" "$final_root"
+rm -f "worksim/${base_tag}.bin" "$temp_input"
 
-  rm -f "worksim/${run_tag}.bin" "$temp_input"
-done
-
-hadd -f "$combined_root" "${root_parts[@]}"
-
-for part in "${root_parts[@]}"; do
-  rm -f "$part"
-done
-
-echo "Done: wrote ${combined_root} with cumulative good events >= ${TARGET_GOOD_EVENTS}"
+echo "Done: wrote ${final_root}"
