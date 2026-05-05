@@ -139,6 +139,7 @@ printf '  dpp range: [%.8f, %.8f] %%\n' "$dpp_min" "$dpp_max"
 printf '  MC settings: copied from %s\n' "$input_file"
 
 base_tag="${kin}_bin$(printf '%03d' "$bin_index")"
+mc_tag="${base_tag}${suffix}"
 temp_input="infiles/${base_tag}.inp"
 log_file="runout/${base_tag}.out"
 work_root="worksim/${base_tag}.root"
@@ -162,7 +163,7 @@ EOF2
 (
   cd util/root_tree
   ./make_root_tree <<EOF3
-${base_tag}
+${mc_tag}
 EOF3
 )
 
@@ -174,6 +175,6 @@ fi
 
 rm -f "$final_root"
 mv -f "$work_root" "$final_root"
-rm -f "worksim/${base_tag}.bin" "$temp_input"
+rm -f "worksim/${mc_tag}.bin" "$temp_input"
 
 echo "Done: wrote ${final_root}"
