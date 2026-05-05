@@ -908,7 +908,7 @@ C           Legacy/default 3He behavior: 2p + n from nucleon F1F2IN21
 
          else
 
-C           Default behavior for all other targets
+C           Default behavior (including 3He when sf_model_flag=0)
             call F1F2IN21(Z_tar,tar_atom_num,Q2_model,W2_model,
      >                    F1_model,F2_model)
 
