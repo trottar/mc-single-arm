@@ -889,27 +889,9 @@ C        Optional 3He structure-function fit table
      >                    F1_model,F2_model)
             endif
 
-         else if (tar_atom_num.eq.3.d0 .and. Z_tar.eq.2.d0) then
-
-C           Define proton/neutron A,Z using the same type as model inputs
-            Z_p = 1.d0
-            A_p = 1.d0
-            Z_n = 0.d0
-            A_n = 1.d0
-
-C           Free proton
-            call F1F2IN21(Z_p,A_p,Q2_model,W2_model,F1_p,F2_p)
-
-C           Free neutron
-            call F1F2IN21(Z_n,A_n,Q2_model,W2_model,F1_n,F2_n)
-
-C           3He = 2p + n
-            F1_model = 2.d0*F1_p + F1_n
-            F2_model = 2.d0*F2_p + F2_n
-
          else
 
-C           Default behavior for all other targets
+C           Default behavior (including 3He when sf_model_flag=0)
             call F1F2IN21(Z_tar,tar_atom_num,Q2_model,W2_model,
      >                    F1_model,F2_model)
 
