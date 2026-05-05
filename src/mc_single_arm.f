@@ -571,8 +571,12 @@ C=======================================================================
 		print *, 'beam_current_uA=', beam_current_uA
 	print *, 'target_dens_m3=', target_dens_m3
 		if(hut_ntuple) then
-		   hbook_filename = hbook_filename(1:last_char(hbook_filename))//
-     >                  '.bin'
+		   if (sf_model_flag.eq.1) then
+		      hbook_filename = hbook_filename(1:last_char(hbook_filename))//
+     >                     '3HeFit.bin'
+		   else
+		      hbook_filename = hbook_filename(1:last_char(hbook_filename))//'.bin'
+		   endif
 		   if(ispec.eq.2) then
 		      call shms_hbook_init(hbook_filename,spec_ntuple)
 		   elseif(ispec.eq.1) then
