@@ -884,6 +884,7 @@ C        Optional 3He structure-function fit table
             call GETSF_F1F2fit(4,sf_fit_imod,xbj_model,Q2_model,
      >                         F1_model,F2_model,FL_model,SF_STAT)
             if (.not.SF_STAT) then
+               sf_model_flag = 0
                call F1F2IN21(Z_tar,tar_atom_num,Q2_model,W2_model,
      >                    F1_model,F2_model)
             endif

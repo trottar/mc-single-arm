@@ -142,7 +142,7 @@ base_tag="${kin}_bin$(printf '%03d' "$bin_index")"
 mc_tag="${base_tag}${suffix}"
 temp_input="infiles/${base_tag}.inp"
 log_file="runout/${base_tag}.out"
-work_root="worksim/${mc_tag}.root"
+work_root="worksim/${base_tag}.root"
 final_root="outfiles/${base_tag}${suffix}.root"
 
 build_once
