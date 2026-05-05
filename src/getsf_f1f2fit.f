@@ -1,13 +1,14 @@
       SUBROUTINE GETSF_F1F2fit(isf0,imod0,xb,q2,F1,F2,FL,STAT)
       IMPLICIT NONE
       CHARACTER*100 filename
+      CHARACTER*100 filename_alt
       real*8 PI/3.1416/
       integer imod0,isf0,imod,isf
       real*8 xb, q2, xb_r, q2_r, xb_r1, q2_r1, xb_r2, q2_r2
       real*8 data1(40)
       real*8 F1,F2,FL
       real*8 tmp1,tmp2
-      integer ifile21,NextUn
+      integer ifile21
       integer i, ix, iq2, nxb_F1F2FIT/3000/, nq2_F1F2FIT/0/
       REAL*8 VQ2_F1F2FIT(500)
       REAL*8 VXB_F1F2FIT(3000)
@@ -17,15 +18,19 @@
       logical FirstcallSF_F1F2FIT /.TRUE./
       integer IOERR
       save FirstcallSF_F1F2FIT,nxb_F1F2FIT,nq2_F1F2FIT,
-     >     VXB_F1F2FIT,VQ2_F1F2FIT,VF1_FIT,VF2_FIT
+     >     VXB_F1F2FIT,VQ2_F1F2FIT,VF1_FIT,VF2_FIT,VFL_FIT
       SFDEBUG=.false.
       SFDEBUG1=.false.
       if (FirstcallSF_F1F2FIT) then
          FirstcallSF_F1F2FIT = .FALSE.
          do imod=1,5
-         WRITE(filename,'("src/interp/sf_tables/Table_3He_F1F2_SF",I1,".csv")')imod
-         ifile21=NextUn()
-         OPEN(ifile21,FILE=filename,STATUS='OLD',err=101)
+         WRITE(filename,'("sf_tables/Table_3He_F1F2_SF",I1,".csv")')imod
+         WRITE(filename_alt,'("src/interp/sf_tables/Table_3He_F1F2_SF",I1,".csv")')imod
+         ifile21=20+imod
+         OPEN(ifile21,FILE=filename,STATUS='OLD',err=110)
+         goto 111
+ 110     OPEN(ifile21,FILE=filename_alt,STATUS='OLD',err=101)
+ 111     continue
          ix=0
          iq2=0
          do ix=1,nxb_F1F2FIT
@@ -61,7 +66,6 @@
          CLOSE(ifile21)
          enddo
       endif
-      if (q2.lt.vq2_F1F2FIT(1)) q2=vq2_F1F2FIT(1)
       xb_r=xb
       q2_r=q2
       if((q2_r.lt.vq2_F1F2FIT(1)).or.(q2_r.gt.vq2_F1F2FIT(nq2_F1F2FIT))) then
@@ -70,34 +74,36 @@
       if((xb_r.lt.vxb_F1F2FIT(1)).or.(xb_r.gt.vxb_F1F2FIT(nxb_F1F2FIT))) then
          F1=0;F2=0;FL=0;STAT=.false.;return
       endif
+      if (q2_r.eq.vq2_F1F2FIT(nq2_F1F2FIT)) q2_r = q2_r - 1.0d-12
+      if (xb_r.eq.vxb_F1F2FIT(nxb_F1F2FIT)) xb_r = xb_r - 1.0d-12
       do ix=1,nxb_F1F2FIT-1
-         if ((xb.ge.vxb_F1F2FIT(ix)).and.(xb.lt.vxb_F1F2FIT(ix+1))) then
+         if ((xb_r.ge.vxb_F1F2FIT(ix)).and.(xb_r.lt.vxb_F1F2FIT(ix+1))) then
             xb_r1=vxb_F1F2FIT(ix); xb_r2=vxb_F1F2FIT(ix+1); goto 104
          endif
       enddo
  104  do iq2=1,nq2_F1F2FIT-1
-         if((q2.ge.vq2_F1F2FIT(iq2)).and.(q2.lt.vq2_F1F2FIT(iq2+1)))then
+         if((q2_r.ge.vq2_F1F2FIT(iq2)).and.(q2_r.lt.vq2_F1F2FIT(iq2+1)))then
             q2_r1=vq2_F1F2FIT(iq2); q2_r2=vq2_F1F2FIT(iq2+1); goto 105
          endif
       enddo
- 105  tmp1 = vf1_FIT(ix,iq2+1,isf0,imod0)*(q2-q2_r1)/(q2_r2-q2_r1)
-     >     + vf1_FIT(ix,iq2,isf0,imod0)*(q2-q2_r2)/(q2_r1-q2_r2)
-      tmp2 = vf1_FIT(ix+1,iq2+1,isf0,imod0)*(q2-q2_r1)/(q2_r2-q2_r1)
-     >     + vf1_FIT(ix+1,iq2,isf0,imod0)*(q2-q2_r2)/(q2_r1-q2_r2)
-      F1 = tmp2 * (xb-xb_r1)/(xb_r2-xb_r1)
-     >     + tmp1 * (xb-xb_r2)/(xb_r1-xb_r2)
-      tmp1 = vf2_FIT(ix,iq2+1,isf0,imod0)*(q2-q2_r1)/(q2_r2-q2_r1)
-     >     + vf2_FIT(ix,iq2,isf0,imod0)*(q2-q2_r2)/(q2_r1-q2_r2)
-      tmp2 = vf2_FIT(ix+1,iq2+1,isf0,imod0)*(q2-q2_r1)/(q2_r2-q2_r1)
-     >     + vf2_FIT(ix+1,iq2,isf0,imod0)*(q2-q2_r2)/(q2_r1-q2_r2)
-      F2 = tmp2 * (xb-xb_r1)/(xb_r2-xb_r1)
-     >     + tmp1 * (xb-xb_r2)/(xb_r1-xb_r2)
-      tmp1 = vfL_FIT(ix,iq2+1,isf0,imod0)*(q2-q2_r1)/(q2_r2-q2_r1)
-     >     + vfL_FIT(ix,iq2,isf0,imod0)*(q2-q2_r2)/(q2_r1-q2_r2)
-      tmp2 = vfL_FIT(ix+1,iq2+1,isf0,imod0)*(q2-q2_r1)/(q2_r2-q2_r1)
-     >     + vfL_FIT(ix+1,iq2,isf0,imod0)*(q2-q2_r2)/(q2_r1-q2_r2)
-      FL = tmp2 * (xb-xb_r1)/(xb_r2-xb_r1)
-     >     + tmp1 * (xb-xb_r2)/(xb_r1-xb_r2)
+ 105  tmp1 = vf1_FIT(ix,iq2+1,isf0,imod0)*(q2_r-q2_r1)/(q2_r2-q2_r1)
+     >     + vf1_FIT(ix,iq2,isf0,imod0)*(q2_r-q2_r2)/(q2_r1-q2_r2)
+      tmp2 = vf1_FIT(ix+1,iq2+1,isf0,imod0)*(q2_r-q2_r1)/(q2_r2-q2_r1)
+     >     + vf1_FIT(ix+1,iq2,isf0,imod0)*(q2_r-q2_r2)/(q2_r1-q2_r2)
+      F1 = tmp2 * (xb_r-xb_r1)/(xb_r2-xb_r1)
+     >     + tmp1 * (xb_r-xb_r2)/(xb_r1-xb_r2)
+      tmp1 = vf2_FIT(ix,iq2+1,isf0,imod0)*(q2_r-q2_r1)/(q2_r2-q2_r1)
+     >     + vf2_FIT(ix,iq2,isf0,imod0)*(q2_r-q2_r2)/(q2_r1-q2_r2)
+      tmp2 = vf2_FIT(ix+1,iq2+1,isf0,imod0)*(q2_r-q2_r1)/(q2_r2-q2_r1)
+     >     + vf2_FIT(ix+1,iq2,isf0,imod0)*(q2_r-q2_r2)/(q2_r1-q2_r2)
+      F2 = tmp2 * (xb_r-xb_r1)/(xb_r2-xb_r1)
+     >     + tmp1 * (xb_r-xb_r2)/(xb_r1-xb_r2)
+      tmp1 = vfL_FIT(ix,iq2+1,isf0,imod0)*(q2_r-q2_r1)/(q2_r2-q2_r1)
+     >     + vfL_FIT(ix,iq2,isf0,imod0)*(q2_r-q2_r2)/(q2_r1-q2_r2)
+      tmp2 = vfL_FIT(ix+1,iq2+1,isf0,imod0)*(q2_r-q2_r1)/(q2_r2-q2_r1)
+     >     + vfL_FIT(ix+1,iq2,isf0,imod0)*(q2_r-q2_r2)/(q2_r1-q2_r2)
+      FL = tmp2 * (xb_r-xb_r1)/(xb_r2-xb_r1)
+     >     + tmp1 * (xb_r-xb_r2)/(xb_r1-xb_r2)
       STAT=.true.
       RETURN
  101  STAT=.false.
