@@ -7,7 +7,7 @@
       real*8 data1(40)
       real*8 F1,F2,FL
       real*8 tmp1,tmp2
-      integer ifile21,NextUn
+      integer ifile21
       integer i, ix, iq2, nxb_F1F2FIT/3000/, nq2_F1F2FIT/0/
       REAL*8 VQ2_F1F2FIT(500)
       REAL*8 VXB_F1F2FIT(3000)
@@ -24,7 +24,7 @@
          FirstcallSF_F1F2FIT = .FALSE.
          do imod=1,5
          WRITE(filename,'("src/interp/sf_tables/Table_3He_F1F2_SF",I1,".csv")')imod
-         ifile21=NextUn()
+         ifile21=20+imod
          OPEN(ifile21,FILE=filename,STATUS='OLD',err=101)
          ix=0
          iq2=0
