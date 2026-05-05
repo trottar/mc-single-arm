@@ -34,7 +34,7 @@ C Local declarations.
      >          chanin /1/,
      >          chanout /2/,
      >          n_trials,trial,
-     >          tmp_int
+     >          tmp_int,
      >          target_good_events
       integer*4 actual_generated_trials
       integer*4 ntuple_weight_entries
