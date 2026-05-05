@@ -884,10 +884,27 @@ C        Optional 3He structure-function fit table
             call GETSF_F1F2fit(4,sf_fit_imod,xbj_model,Q2_model,
      >                         F1_model,F2_model,FL_model,SF_STAT)
             if (.not.SF_STAT) then
-               sf_model_flag = 0
-               call F1F2IN21(Z_tar,tar_atom_num,Q2_model,W2_model,
-     >                    F1_model,F2_model)
+               Z_p = 1.d0
+               A_p = 1.d0
+               Z_n = 0.d0
+               A_n = 1.d0
+               call F1F2IN21(Z_p,A_p,Q2_model,W2_model,F1_p,F2_p)
+               call F1F2IN21(Z_n,A_n,Q2_model,W2_model,F1_n,F2_n)
+               F1_model = 2.d0*F1_p + F1_n
+               F2_model = 2.d0*F2_p + F2_n
             endif
+
+         else if (tar_atom_num.eq.3.d0 .and. Z_tar.eq.2.d0) then
+
+C           Legacy/default 3He behavior: 2p + n from nucleon F1F2IN21
+            Z_p = 1.d0
+            A_p = 1.d0
+            Z_n = 0.d0
+            A_n = 1.d0
+            call F1F2IN21(Z_p,A_p,Q2_model,W2_model,F1_p,F2_p)
+            call F1F2IN21(Z_n,A_n,Q2_model,W2_model,F1_n,F2_n)
+            F1_model = 2.d0*F1_p + F1_n
+            F2_model = 2.d0*F2_p + F2_n
 
          else
 
