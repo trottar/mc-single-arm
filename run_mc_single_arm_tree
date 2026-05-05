@@ -10,6 +10,20 @@ make
 ./mc_single_arm <<EOF |& tee "../runout/$1.out"
 $1
 EOF
+set mc_status=$status
+if ( $mc_status != 0 ) then
+  echo "ERROR: mc_single_arm failed (exit $mc_status). See runout/$1.out"
+  exit $mc_status
+endif
+if ( ! -e "../worksim/$1.bin" ) then
+  echo "ERROR: expected worksim/$1.bin was not produced by mc_single_arm"
+  exit 2
+endif
+set binsz=`stat -c%s "../worksim/$1.bin"`
+if ( "$binsz" == "0" ) then
+  echo "ERROR: worksim/$1.bin is empty; aborting ROOT conversion"
+  exit 3
+endif
 cd ../util/root_tree
 make clean
 make
