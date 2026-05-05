@@ -157,9 +157,9 @@ prepare_sf_tables:
 	  echo "3He SF CSV tables already present in $$tables_dir"; \
 	  exit 0; \
 	fi; \
-	if [ -f "interp/F1F221_3He_XZ_20250828_tables.tar.gz" ]; then \
-	  echo "Extracting interp/F1F221_3He_XZ_20250828_tables.tar.gz"; \
-	  tar -xzf "interp/F1F221_3He_XZ_20250828_tables.tar.gz" -C "interp"; \
+	if [ -f "interp/F1F221_3He_XZ_20250828_tables2.tar.gz" ]; then \
+	  echo "Extracting interp/F1F221_3He_XZ_20250828_tables2.tar.gz"; \
+	  tar -xzf "interp/F1F221_3He_XZ_20250828_tables2.tar.gz" -C "interp"; \
 	elif [ -f "interp/F1F221_3He_XZ_20250828_tables.tar" ]; then \
 	  echo "Extracting interp/F1F221_3He_XZ_20250828_tables.tar"; \
 	  tar -xf "interp/F1F221_3He_XZ_20250828_tables.tar" -C "interp"; \
