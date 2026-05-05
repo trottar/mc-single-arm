@@ -16,7 +16,7 @@
      >     VFL_FIT(3000,500,4,0:5)
       logical STAT,SFDEBUG,SFDEBUG1
       logical FirstcallSF_F1F2FIT /.TRUE./
-      integer IOERR
+      integer IOERR,OPENSTAT
       save FirstcallSF_F1F2FIT,nxb_F1F2FIT,nq2_F1F2FIT,
      >     VXB_F1F2FIT,VQ2_F1F2FIT,VF1_FIT,VF2_FIT,VFL_FIT
       SFDEBUG=.false.
@@ -24,9 +24,15 @@
       if (FirstcallSF_F1F2FIT) then
          FirstcallSF_F1F2FIT = .FALSE.
          do imod=1,5
-         WRITE(filename,'("src/interp/sf_tables/Table_3He_F1F2_SF",I1,".csv")')imod
+         WRITE(filename,'("sf_tables/Table_3He_F1F2_SF",I1,".csv")')imod
+         WRITE(filename_alt,'("src/interp/sf_tables/Table_3He_F1F2_SF",I1,".csv")')imod
          ifile21=20+imod
-         OPEN(ifile21,FILE=filename,STATUS='OLD',err=101)
+         OPENSTAT = 0
+         OPEN(ifile21,FILE=filename,STATUS='OLD',IOSTAT=OPENSTAT)
+         if (OPENSTAT.ne.0) then
+            OPEN(ifile21,FILE=filename_alt,STATUS='OLD',IOSTAT=OPENSTAT)
+         endif
+         if (OPENSTAT.ne.0) goto 101
          ix=0
          iq2=0
          do ix=1,nxb_F1F2FIT
