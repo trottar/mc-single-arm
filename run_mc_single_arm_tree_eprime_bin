@@ -119,6 +119,16 @@ fi
 
 read -r eprime_min eprime_max dpp_min dpp_max nbins < <(resolve_bin "$kin" "$bin_index" "$p_spec_mev")
 
+read -r sf_model_flag < <(awk '
+  /SF model flag/ {print $1; found=1; exit}
+  END {if (!found) print 0}
+' "$input_file")
+if [[ "$sf_model_flag" == "1" ]]; then
+  suffix="3HeFit"
+else
+  suffix=""
+fi
+
 printf 'Resolved setup:\n'
 printf '  kin: %s\n' "$kin"
 printf '  input: %s\n' "$input_file"
@@ -132,7 +142,7 @@ base_tag="${kin}_bin$(printf '%03d' "$bin_index")"
 temp_input="infiles/${base_tag}.inp"
 log_file="runout/${base_tag}.out"
 work_root="worksim/${base_tag}.root"
-final_root="outfiles/${base_tag}.root"
+final_root="outfiles/${base_tag}${suffix}.root"
 
 build_once
 
