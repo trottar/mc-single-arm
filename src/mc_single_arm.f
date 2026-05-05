@@ -34,11 +34,11 @@ C Local declarations.
      >          chanin /1/,
      >          chanout /2/,
      >          n_trials,trial,
-     >          tmp_int,
-     >          target_good_events,
-     >          actual_generated_trials
-     >          ntuple_weight_entries,
-     >          ntuple_zero_weight_entries
+     >          tmp_int
+     >          target_good_events
+      integer*4 actual_generated_trials
+      integer*4 ntuple_weight_entries
+      integer*4 ntuple_zero_weight_entries
 	
 	integer*4 Itrial                        ! TH - add this for gfortran: forces integer type cast
 	logical*4	iss
