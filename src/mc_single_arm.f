@@ -883,6 +883,11 @@ C        Optional 3He structure-function fit table
      >       .and. Z_tar.eq.2.d0) then
             call GETSF_F1F2fit(4,sf_fit_imod,xbj_model,Q2_model,
      >                         F1_model,F2_model,FL_model,SF_STAT)
+            if (Itrial.eq.1 .and. SF_STAT) then
+               write(6,*) 'SF model=1 uses GETSF_F1F2fit from'
+               write(6,*) 'interp/sf_tables/Table_3He_F1F2_SF*.csv'
+               write(6,*) 'isf=4 (x,z integrated), imod=', sf_fit_imod
+            endif
             if (.not.SF_STAT) then
                write(6,*) 'ERROR: GETSF_F1F2fit failed with sf_model_flag=1'
                write(6,*) 'Check src/interp/sf_tables/Table_3He_F1F2_SF*.csv'
