@@ -37,7 +37,9 @@ C Local declarations.
      >          tmp_int,
      >          target_good_events,
      >          actual_generated_trials
-
+     >          ntuple_weight_entries,
+     >          ntuple_zero_weight_entries
+	
 	integer*4 Itrial                        ! TH - add this for gfortran: forces integer type cast
 	logical*4	iss
 
@@ -175,6 +177,8 @@ C ================================ Executable Code =============================
 		use_good_target = .false.
 		target_good_events = 0
 		actual_generated_trials = 0
+		ntuple_weight_entries = 0
+		ntuple_zero_weight_entries = 0		
 
 C Initialize
 C using SIMC unstructured version
@@ -878,6 +882,8 @@ C Inclusive structure-function model (F1F2IN21) for acceptance weighting
       if (Q2_model.gt.0.d0 .and. W2_model.gt.0.d0 .and.
      >    theta_model.gt.0.d0) then
 
+C        The SF model flag only selects F1_model/F2_model here.
+C        Both branches use the common cross-section and weight code below.	 
 C        Optional 3He structure-function fit table
          if (sf_model_flag.eq.1 .and. tar_atom_num.eq.3.d0
      >       .and. Z_tar.eq.2.d0) then
@@ -1140,6 +1146,10 @@ C This is ugly, but want the option to have different outputs
 C for spectrometer ntuples
 	 if(ispec.eq.2) then
 	    if (store_all.OR.(hut_ntuple.AND.ok_spec)) then
+	       ntuple_weight_entries = ntuple_weight_entries + 1
+	       if (sigma_weight.eq.0.d0) then
+	          ntuple_zero_weight_entries = ntuple_zero_weight_entries + 1
+	       endif	       
 	       shms_hut(1) = x_fp
 	       shms_hut(2) = y_fp
 	       shms_hut(3) = dx_fp
@@ -1193,6 +1203,10 @@ C for spectrometer ntuples
 
 	 if(ispec.eq.1) then
 	    if (store_all.OR.(hut_ntuple.AND.ok_spec)) then
+	       ntuple_weight_entries = ntuple_weight_entries + 1
+	       if (sigma_weight.eq.0.d0) then
+	          ntuple_zero_weight_entries = ntuple_zero_weight_entries + 1
+	       endif	       
 	       hms_hut(1) = x_fp
 	       hms_hut(2) = y_fp
 	       hms_hut(3) = dx_fp
@@ -1274,7 +1288,17 @@ C Close NTUPLE file.
 		write (chanout,1003) p_spec,th_spec*degrad
         write (chanout,1004) (gen_lim(i),i=1,6)
 
-			write (chanout,1005) n_trials,actual_generated_trials
+	write (chanout,1005) n_trials,actual_generated_trials
+	write (chanout,*) 'Ntuple weight entries written = ',
+     >                  ntuple_weight_entries
+	write (chanout,*) 'Ntuple zero-weight entries written = ',
+     >                  ntuple_zero_weight_entries
+	write (6,*) 'Ntuple weights normalized by generated trials = ',
+     >            actual_generated_trials
+	write (6,*) 'Ntuple weight entries written = ',
+     >            ntuple_weight_entries
+	write (6,*) 'Ntuple zero-weight entries written = ',
+     >            ntuple_zero_weight_entries	
 			if (use_good_target) then
 		   write (chanout,1017) target_good_events,armSTOP_successes
 		   if (armSTOP_successes.lt.target_good_events) then
