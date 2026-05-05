@@ -24,13 +24,9 @@
       if (FirstcallSF_F1F2FIT) then
          FirstcallSF_F1F2FIT = .FALSE.
          do imod=1,5
-         WRITE(filename,'("sf_tables/Table_3He_F1F2_SF",I1,".csv")')imod
-         WRITE(filename_alt,'("src/interp/sf_tables/Table_3He_F1F2_SF",I1,".csv")')imod
+         WRITE(filename,'("src/interp/sf_tables/Table_3He_F1F2_SF",I1,".csv")')imod
          ifile21=20+imod
-         OPEN(ifile21,FILE=filename,STATUS='OLD',err=110)
-         goto 111
- 110     OPEN(ifile21,FILE=filename_alt,STATUS='OLD',err=101)
- 111     continue
+         OPEN(ifile21,FILE=filename,STATUS='OLD',err=101)
          ix=0
          iq2=0
          do ix=1,nxb_F1F2FIT
