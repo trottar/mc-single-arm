@@ -14,3 +14,16 @@ The code now probes both:
 2. `src/interp/sf_tables/` (repo-local fallback)
 
 If none are found, `GETSF_F1F2fit` returns `STAT=.false.` and caller fallback logic is used.
+
+
+## Automatic extraction during build
+
+When you run `make` in `src/`, the `prepare_sf_tables` step now checks whether
+the CSVs already exist. If not, it attempts to extract one of:
+
+- `interp/F1F221_3He_XZ_20250828_tables.tar.gz`
+- `interp/F1F221_3He_XZ_20250828_tables.tar`
+- `interp/F1F221_3He_XZ_20250828_tables.tar.*` (split tar parts)
+
+into `interp/`, so `interp/sf_tables/` is populated automatically when the
+archives are present.
