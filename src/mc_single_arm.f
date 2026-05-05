@@ -74,9 +74,12 @@ C Event limits, topdrawer limits, physics quantities
         real *8 tar_mass, tar_atom_num          !elastic calibration
         real *8 ebeam_model            !beam energy (GeV) for F1F2IN21
         real *8 Z_tar                  !target charge for F1F2IN21
+        integer sf_model_flag           !0=F1F2IN21(default), 1=3He table fit
+        integer sf_fit_imod             !fit variant for GETSF_F1F2fit
         real *8 Eprime, Q2_model, W2_model, nu_model
         real *8 W_model, xbj_model, theta_model
-        real *8 F1_model, F2_model
+        real *8 F1_model, F2_model, FL_model
+        logical SF_STAT
         real *8 Mp_GeV
 
 C --- Added for 3He = 2p + n construction ---
@@ -278,7 +281,7 @@ C Open setup file.
 
 C Define HBOOK/NTUPLE filename if used.
 	if (hut_ntuple) then
-	  hbook_filename = '../worksim/'//rawname(1:last_char(rawname))//'.bin'
+	  hbook_filename = '../worksim/'//rawname(1:last_char(rawname))
 	endif
 C Open Output file.
 	filename = '../outfiles/'//rawname(1:last_char(rawname))//'.out'
@@ -305,17 +308,6 @@ C Strip off header
 	write(*,*) str_line(1:last_char(str_line))
 	iss = rd_int(str_line,ispec)
 	if (.not.iss) stop 'ERROR (Spectrometer selection) in setup!'
-! Open HBOOK/NTUPLE file here
-	if(hut_ntuple) then
-	   if(ispec.eq.2) then
-	      call shms_hbook_init(hbook_filename,spec_ntuple)
-	   elseif(ispec.eq.1) then
-	      call hms_hbook_init(hbook_filename,spec_ntuple)
-	   else
-	      write(6,*) 'Uknown spectrometer, stopping.'
-	      stop
-	   endif
-	endif
 
 ! Spectrometer momentum:
 	read (chanin,1001) str_line
@@ -468,6 +460,8 @@ C Acceptance (constant for the run), analogous to old script
       tar_atom_num=12.  !by default it is carbon
       ebeam_model=-1.0d0      !default: disable F1F2IN21 unless set
       Z_tar = 1.0d0           !default: proton
+      sf_model_flag = 0        !default model: F1F2IN21
+      sf_fit_imod = 1          !default 3He fit variant
       beam_current_uA = 0.d0  !optional (uA); if <=0, absolute rate disabled
       target_dens_m3  = 0.d0  !optional (#/m^3); if <=0, absolute rate disabled	
       n_areal_m2 = 0.d0
@@ -515,6 +509,15 @@ C=======================================================================
       read (chanin,1001,end=1000,err=1000) str_line
       write(*,*) str_line(1:last_char(str_line))
       iss = rd_real(str_line,Z_tar)
+
+!     Read in SF model selector (optional): 0=F1F2IN21, 1=3He fit table
+      read (chanin,1001,end=1000,err=1000) str_line
+      write(*,*) str_line(1:last_char(str_line))
+      if (rd_int(str_line,sf_model_flag)) then
+         if (sf_model_flag.ne.0 .and. sf_model_flag.ne.1) sf_model_flag=0
+      else
+         sf_model_flag=0
+      endif
 
 
 !     Optional: beam current (uA) and target number density (#/m^3)
@@ -564,8 +567,25 @@ C=======================================================================
 	print *, 'beam_energy=', beam_energy
 		print *, 'Z_tar=', Z_tar
 		print *, 'tar_atom_num=', tar_atom_num
+		print *, 'sf_model_flag=', sf_model_flag
 		print *, 'beam_current_uA=', beam_current_uA
-		print *, 'target_dens_m3=', target_dens_m3
+	print *, 'target_dens_m3=', target_dens_m3
+		if(hut_ntuple) then
+		   if (sf_model_flag.eq.1) then
+		      hbook_filename = hbook_filename(1:last_char(hbook_filename))//
+     >                     '3HeFit.bin'
+		   else
+		      hbook_filename = hbook_filename(1:last_char(hbook_filename))//'.bin'
+		   endif
+		   if(ispec.eq.2) then
+		      call shms_hbook_init(hbook_filename,spec_ntuple)
+		   elseif(ispec.eq.1) then
+		      call hms_hbook_init(hbook_filename,spec_ntuple)
+		   else
+		      write(6,*) 'Uknown spectrometer, stopping.'
+		      stop
+		   endif
+		endif
 		if (use_good_target) then
 		   print *, 'target_good_events=', target_good_events
 		   print *, 'max_generated_trials=', n_trials
@@ -809,6 +829,8 @@ C Initialize F1F2IN21-derived quantities for this event
       theta_model  = -1.d0
       F1_model     = 0.d0
       F2_model     = 0.d0
+      FL_model     = 0.d0
+      SF_STAT      = .false.
       mott_nb      = 0.d0
       sigma_f1f2   = 0.d0
       sigma_weight = 0.d0
@@ -856,8 +878,17 @@ C Inclusive structure-function model (F1F2IN21) for acceptance weighting
       if (Q2_model.gt.0.d0 .and. W2_model.gt.0.d0 .and.
      >    theta_model.gt.0.d0) then
 
-C        Special handling for 3He only: 3He = 2p + n
-         if (tar_atom_num.eq.3.d0 .and. Z_tar.eq.2.d0) then
+C        Optional 3He structure-function fit table
+         if (sf_model_flag.eq.1 .and. tar_atom_num.eq.3.d0
+     >       .and. Z_tar.eq.2.d0) then
+            call GETSF_F1F2fit(4,sf_fit_imod,xbj_model,Q2_model,
+     >                         F1_model,F2_model,FL_model,SF_STAT)
+            if (.not.SF_STAT) then
+               F1_model = 0.d0
+               F2_model = 0.d0
+            endif
+
+         else if (tar_atom_num.eq.3.d0 .and. Z_tar.eq.2.d0) then
 
 C           Define proton/neutron A,Z using the same type as model inputs
             Z_p = 1.d0
@@ -1313,6 +1344,7 @@ C Compute reconstruction resolutions.
 
 		write(6,*) armSTOP_trials,' Trials',armSTOP_successes
      > ,' Successes'
+
 		if (use_good_target) then
 		   write (6,1017) target_good_events,armSTOP_successes
 		   if (armSTOP_successes.lt.target_good_events) then
