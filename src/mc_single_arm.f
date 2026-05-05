@@ -569,8 +569,7 @@ C=======================================================================
 		print *, 'tar_atom_num=', tar_atom_num
 		print *, 'sf_model_flag=', sf_model_flag
 		print *, 'beam_current_uA=', beam_current_uA
-		print *, 'target_dens_m3=', target_dens_m3
-
+	print *, 'target_dens_m3=', target_dens_m3
 		if(hut_ntuple) then
 		   if (sf_model_flag.eq.1) then
 		      hbook_filename = hbook_filename(1:last_char(hbook_filename))//
@@ -1276,24 +1275,7 @@ C Close NTUPLE file.
         write (chanout,1004) (gen_lim(i),i=1,6)
 
 			write (chanout,1005) n_trials,actual_generated_trials
-	
-		if(hut_ntuple) then
-		   if (sf_model_flag.eq.1) then
-		      hbook_filename = hbook_filename(1:last_char(hbook_filename))//
-     >                     '3HeFit.bin'
-		   else
-		      hbook_filename = hbook_filename(1:last_char(hbook_filename))//'.bin'
-		   endif
-		   if(ispec.eq.2) then
-		      call shms_hbook_init(hbook_filename,spec_ntuple)
-		   elseif(ispec.eq.1) then
-		      call hms_hbook_init(hbook_filename,spec_ntuple)
-		   else
-		      write(6,*) 'Uknown spectrometer, stopping.'
-		      stop
-		   endif
-		endif
-		if (use_good_target) then
+			if (use_good_target) then
 		   write (chanout,1017) target_good_events,armSTOP_successes
 		   if (armSTOP_successes.lt.target_good_events) then
 		      write (chanout,1018)
@@ -1363,22 +1345,6 @@ C Compute reconstruction resolutions.
 		write(6,*) armSTOP_trials,' Trials',armSTOP_successes
      > ,' Successes'
 
-		if(hut_ntuple) then
-		   if (sf_model_flag.eq.1) then
-		      hbook_filename = hbook_filename(1:last_char(hbook_filename))//
-     >                     '3HeFit.bin'
-		   else
-		      hbook_filename = hbook_filename(1:last_char(hbook_filename))//'.bin'
-		   endif
-		   if(ispec.eq.2) then
-		      call shms_hbook_init(hbook_filename,spec_ntuple)
-		   elseif(ispec.eq.1) then
-		      call hms_hbook_init(hbook_filename,spec_ntuple)
-		   else
-		      write(6,*) 'Uknown spectrometer, stopping.'
-		      stop
-		   endif
-		endif
 		if (use_good_target) then
 		   write (6,1017) target_good_events,armSTOP_successes
 		   if (armSTOP_successes.lt.target_good_events) then
