@@ -884,14 +884,9 @@ C        Optional 3He structure-function fit table
             call GETSF_F1F2fit(4,sf_fit_imod,xbj_model,Q2_model,
      >                         F1_model,F2_model,FL_model,SF_STAT)
             if (.not.SF_STAT) then
-               Z_p = 1.d0
-               A_p = 1.d0
-               Z_n = 0.d0
-               A_n = 1.d0
-               call F1F2IN21(Z_p,A_p,Q2_model,W2_model,F1_p,F2_p)
-               call F1F2IN21(Z_n,A_n,Q2_model,W2_model,F1_n,F2_n)
-               F1_model = 2.d0*F1_p + F1_n
-               F2_model = 2.d0*F2_p + F2_n
+               write(6,*) 'ERROR: GETSF_F1F2fit failed with sf_model_flag=1'
+               write(6,*) 'Check src/interp/sf_tables/Table_3He_F1F2_SF*.csv'
+               stop 'SF table lookup failed'
             endif
 
          else if (tar_atom_num.eq.3.d0 .and. Z_tar.eq.2.d0) then
