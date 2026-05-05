@@ -37,7 +37,8 @@
      0          flag to use sieve
      3          target atomic number (Z+N), must be coupled with the above beam_energy
      10.38          beam energy for F1F2IN21 (GeV)  <--- ebeam_model     
-     2          target charge Z (for F1F2IN21)     
+     2          target charge Z (for F1F2IN21)          
+     0          SF model flag (0=F1F2IN21, 1=3HeFit table)     
      0          Multiple scattering type (1= Highland, 0=Highland w tail)
      1          Enegy Loss (1=On)
    30.0      Beam current (uA) for rate calculation (30 mA)
