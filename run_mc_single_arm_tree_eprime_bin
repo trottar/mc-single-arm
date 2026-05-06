@@ -122,11 +122,13 @@ read -r eprime_min eprime_max dpp_min dpp_max nbins < <(resolve_bin "$kin" "$bin
 read -r sf_model_flag < <(awk '
   /SF model flag/ {print $1; found=1; exit}
   END {if (!found) print 0}
-' "$input_file")
+' "$input_file)"
 if [[ "$sf_model_flag" == "1" ]]; then
-  suffix="3HeFit"
+    suffix="3HeFit"
+    sf_model_label="3HeFit table"
 else
-  suffix=""
+    suffix=""
+    sf_model_label="F1F2IN21"
 fi
 
 printf 'Resolved setup:\n'
@@ -136,14 +138,20 @@ printf '  p_spec: %s MeV/c\n' "$p_spec_mev"
 printf '  bin_index: %s / %s\n' "$bin_index" "$((nbins-1))"
 printf "  E' range: [%s, %s] GeV\n" "$eprime_min" "$eprime_max"
 printf '  dpp range: [%.8f, %.8f] %%\n' "$dpp_min" "$dpp_max"
+printf '  SF model flag: %s (%s)\n' "$sf_model_flag" "$sf_model_label"
 printf '  MC settings: copied from %s\n' "$input_file"
 
 base_tag="${kin}_bin$(printf '%03d' "$bin_index")"
 mc_tag="${base_tag}${suffix}"
 temp_input="infiles/${base_tag}.inp"
-log_file="runout/${base_tag}.out"
+# mc_single_arm must receive base_tag so it can read the generated
+# infiles/${base_tag}.inp. When SF model flag 1 is selected, the Fortran code
+# appends 3HeFit to the binary output name, so the ROOT converter and final
+# ROOT file must use mc_tag instead.
+log_file="runout/${mc_tag}.out"
 work_root="worksim/${mc_tag}.root"
-final_root="outfiles/${base_tag}${suffix}.root"
+final_root="outfiles/${mc_tag}.root"
+printf '  MC output tag: %s\n' "$mc_tag"
 
 build_once
 
