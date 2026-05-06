@@ -122,7 +122,7 @@ read -r eprime_min eprime_max dpp_min dpp_max nbins < <(resolve_bin "$kin" "$bin
 read -r sf_model_flag < <(awk '
   /SF model flag/ {print $1; found=1; exit}
   END {if (!found) print 0}
-' "$input_file)"
+' "$input_file")
 if [[ "$sf_model_flag" == "1" ]]; then
     suffix="3HeFit"
     sf_model_label="3HeFit table"
