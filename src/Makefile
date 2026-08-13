@@ -18,7 +18,7 @@ my_objs = hms_hbook_init.o shms_hbook_init.o \
 	  $(SHARE)rotate_vaxis.o $(SHARE)locforunt.o $(SHARE)musc.o \
           $(SHARE)musc_ext.o $(SHARE)stringlib.o mt19937.o gauss1.o \
 	  $(CH)lfit.o $(CH)ranlux.o $(CH)fint.o $(CH)kerset.o $(CH)abend.o \
-          loren.o F1F2IN21_v1.0.o getsf_f1f2fit.o
+           loren.o F1F2IN21_v1.0.o getsf_f1f2fit.o get_radcorr_3he.o
 
 MYOS := $(subst -,,$(shell uname))
 #mess $(MYOS)
@@ -170,6 +170,21 @@ prepare_sf_tables:
 	  echo "No 3He SF table archive found under src/interp; relying on existing CSVs."; \
 	fi
 
+prepare_radcorr_tables:
+	@set -e; \
+	tables_dir="interp/radcorr_tables/Newfit_20260710_fullxquad_15angles"; \
+	if [ -f "$$tables_dir/SF1_G1F1cmplt_QE95/radiated_data_26.0deg_short.csv" ]; then \
+	  echo "3He radiative-weight CSV tables already present in $$tables_dir"; \
+	  exit 0; \
+	fi; \
+	if [ -f "interp/Newfit_20260710_fullxquad_15angles.tar.gz" ]; then \
+	  echo "Extracting interp/Newfit_20260710_fullxquad_15angles.tar.gz"; \
+	  mkdir -p "interp/radcorr_tables"; \
+	  tar -xzf "interp/Newfit_20260710_fullxquad_15angles.tar.gz" -C "interp/radcorr_tables"; \
+	else \
+	  echo "No 3He radiative-weight archive found under src/interp."; \
+	  echo "Place Newfit_20260710_fullxquad_15angles.tar.gz there, then run make prepare_radcorr_tables."; \
+	fi
+
 clean:
 	rm -f *.o $(H)*.o $(SH)*.o $(SHARE)*.o $(CH)*.o mc_single_arm
-

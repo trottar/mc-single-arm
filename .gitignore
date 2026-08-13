@@ -7,3 +7,6 @@ src/mc_single_arm
 # Large files
 F1F221_3He_XZ_20250828_src.tar
 F1F221_3He_XZ_20250828_tables.tar.gz
+Newfit_20260710_fullxquad_15angles.tar.gz
+src/interp/radcorr_tables/Newfit_20260710_fullxquad_15angles/
+util/radcorr/test_get_radcorr_3he

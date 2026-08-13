@@ -89,8 +89,39 @@ Info on infiles
 * If 1st Cerenkov not used then can replace with vacuum pipe. Option of helium bag is availble. this was for study.
 * The multifoil optics targets can be implementented by entering the target length as -2 for the optics2 target (two foils) and -3 for optics1 target (three foils).
 * the sieve can be used by setting the flag == 1. (See infiles/ examples)
- 
-Ntuple variables in SHMS hut ntuple ntuple id = 1411 
+
+### 3He fitted structure functions and radiative weights
+
+After `SF model flag`, input files may contain these optional labeled lines:
+
+```text
+1  3He fit model (1=SF1, 2=SF2, 3=SF3, 4=SF4, 5=SF5)
+0  Radiative correction (0=Born, 1=radiated weight)
+```
+
+They default to SF1 and Born weighting when omitted.  The radiative option is
+supported only for the 3He `GETSF_F1F2fit` path (`SF model flag = 1`, A=3,
+Z=2) at 10.38 GeV.  It uses the selected model's table ratio
+
+```text
+rad_weight_factor = XSrad_unp / XSborn_unp
+sigma_f1f2        = sigma_born_f1f2 * rad_weight_factor
+```
+
+`F1_model` and `F2_model` remain Born values, and the binary/ROOT output
+schema is unchanged.  There is no extrapolation outside the table coverage:
+26--33 degrees and the finite, angle-dependent `nu` ranges.
+
+The radiative archive is optional for ordinary builds.  To prepare it, place
+`Newfit_20260710_fullxquad_15angles.tar.gz` in `src/interp/` and run
+`make prepare_radcorr_tables` from `src/`.  The archive uses MeV for `Ebeam`
+and `nu`; the MC passes event `nu` in GeV and converts it only at lookup.
+
+Historical A1n material sometimes calls `sigma_Born / sigma_rad` "radcorr".
+This MC intentionally uses the inverse `rad_weight_factor` because it converts
+a Born-weighted MC event into a radiated-weighted event.
+
+Ntuple variables in SHMS hut ntuple ntuple id = 1411
 ---------------------
 * psxfp  Focal plane vertical position 
 * psyfp  Focal plane horizontal position

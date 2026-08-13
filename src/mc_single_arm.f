@@ -76,12 +76,13 @@ C Event limits, topdrawer limits, physics quantities
         real *8 tar_mass, tar_atom_num          !elastic calibration
         real *8 ebeam_model            !beam energy (GeV) for F1F2IN21
         real *8 Z_tar                  !target charge for F1F2IN21
-        integer sf_model_flag           !0=F1F2IN21(default), 1=3He table fit
-        integer sf_fit_imod             !fit variant for GETSF_F1F2fit
+         integer sf_model_flag           !0=F1F2IN21(default), 1=3He table fit
+         integer sf_fit_imod             !fit variant for GETSF_F1F2fit
+         integer radcorr_flag            !0=Born, 1=radiated MC weight
         real *8 Eprime, Q2_model, W2_model, nu_model
         real *8 W_model, xbj_model, theta_model
         real *8 F1_model, F2_model, FL_model
-        logical SF_STAT
+         logical SF_STAT,RADCORR_STAT
         real *8 Mp_GeV
 
 C --- Added for 3He = 2p + n construction ---
@@ -93,7 +94,10 @@ C --- Added for 3He = 2p + n construction ---
 C --- Added: cross section (optional) absolute rate, analogous to old script ---
 	real*8 p_accept, th_accept, ph_accept
 	real*8 mott_nb, tan2, w1_model, w2_inel_model
-	real*8 sigma_f1f2, sigma_weight, rate_f1f2
+	real*8 sigma_f1f2, sigma_born_f1f2, sigma_weight, rate_f1f2
+	real*8 rad_weight_factor, rad_weight_min, rad_weight_max
+	real*8 rad_weight_sum
+        integer*8 n_radcorr_req,n_radcorr_ok,n_radcorr_fail
 	real*8 th2, p_spec_GeV, targ_len_m, jac_ep
 	real*8 n_areal_m2, lumi_per_C
 	real*8 beam_current_uA, target_dens_m3
@@ -179,6 +183,12 @@ C ================================ Executable Code =============================
 		actual_generated_trials = 0
 		ntuple_weight_entries = 0
 		ntuple_zero_weight_entries = 0		
+        n_radcorr_req = 0
+        n_radcorr_ok = 0
+        n_radcorr_fail = 0
+        rad_weight_sum = 0.D0
+        rad_weight_min = 1.D99
+        rad_weight_max = -1.D99
 
 C Initialize
 C using SIMC unstructured version
@@ -464,8 +474,9 @@ C Acceptance (constant for the run), analogous to old script
       tar_atom_num=12.  !by default it is carbon
       ebeam_model=-1.0d0      !default: disable F1F2IN21 unless set
       Z_tar = 1.0d0           !default: proton
-      sf_model_flag = 0        !default model: F1F2IN21
-      sf_fit_imod = 1          !default 3He fit variant
+       sf_model_flag = 0        !default model: F1F2IN21
+       sf_fit_imod = 1          !default 3He fit variant
+       radcorr_flag = 0         !default: keep Born F1/F2 weight
       beam_current_uA = 0.d0  !optional (uA); if <=0, absolute rate disabled
       target_dens_m3  = 0.d0  !optional (#/m^3); if <=0, absolute rate disabled	
       n_areal_m2 = 0.d0
@@ -515,13 +526,49 @@ C=======================================================================
       iss = rd_real(str_line,Z_tar)
 
 !     Read in SF model selector (optional): 0=F1F2IN21, 1=3He fit table
-      read (chanin,1001,end=1000,err=1000) str_line
-      write(*,*) str_line(1:last_char(str_line))
-      if (rd_int(str_line,sf_model_flag)) then
-         if (sf_model_flag.ne.0 .and. sf_model_flag.ne.1) sf_model_flag=0
-      else
-         sf_model_flag=0
-      endif
+       read (chanin,1001,end=1000,err=1000) str_line
+       write(*,*) str_line(1:last_char(str_line))
+       if (rd_int(str_line,sf_model_flag)) then
+          if (sf_model_flag.ne.0 .and. sf_model_flag.ne.1) sf_model_flag=0
+       else
+          sf_model_flag=0
+       endif
+
+C     Optional 3He fit selector.  Keep the historical tail parser below
+C     intact by putting a nonmatching line back on the input stream.
+       read (chanin,1001,end=1000,err=1000) str_line
+       write(*,*) str_line(1:last_char(str_line))
+       if (index(str_line,'3He fit model').gt.0 .or.
+     >     index(str_line,'sf_fit_imod').gt.0) then
+          if (.not.rd_int(str_line,sf_fit_imod)) then
+             stop 'ERROR: invalid 3He fit model in setup file'
+          endif
+          if (sf_fit_imod.lt.1 .or. sf_fit_imod.gt.5) then
+             write(6,*) 'ERROR: invalid sf_fit_imod =',sf_fit_imod
+             write(6,*) 'Allowed values are 1-5 corresponding to SF1-SF5.'
+             stop 'invalid sf_fit_imod'
+          endif
+       else
+          backspace(chanin)
+       endif
+
+C     Optional radiated-weight selector.  As above, a legacy line is
+C     re-read by the pre-existing trailing-input logic below.
+       read (chanin,1001,end=1000,err=1000) str_line
+       write(*,*) str_line(1:last_char(str_line))
+       if (index(str_line,'Radiative correction').gt.0 .or.
+     >     index(str_line,'radcorr_flag').gt.0) then
+          if (.not.rd_int(str_line,radcorr_flag)) then
+             stop 'ERROR: invalid radiative correction flag in setup file'
+          endif
+          if (radcorr_flag.ne.0 .and. radcorr_flag.ne.1) then
+             write(6,*) 'ERROR: invalid radcorr_flag =',radcorr_flag
+             write(6,*) 'Allowed values are 0 (Born) or 1 (radiated).'
+             stop 'invalid radcorr_flag'
+          endif
+       else
+          backspace(chanin)
+       endif
 
 
 !     Optional: beam current (uA) and target number density (#/m^3)
@@ -566,12 +613,37 @@ C=======================================================================
  1000 continue
       Mp_GeV = 0.93827208d0
 
+C     Radiative tables convert this MC's Born F1/F2 weight to a radiated
+C     weight.  Validate the supported 3He configuration before trials begin.
+       if (radcorr_flag.eq.1) then
+          if (sf_model_flag.ne.1 .or. tar_atom_num.ne.3.d0 .or.
+     >        Z_tar.ne.2.d0) then
+             write(6,*) 'ERROR: radcorr_flag=1 is only supported for'
+             write(6,*) '       the 3He GETSF_F1F2fit model (A=3, Z=2).'
+             stop 'unsupported 3He radiative-correction configuration'
+          endif
+          if (dabs(ebeam_model-10.38d0).gt.1.d-3) then
+             write(6,*) 'ERROR: 3He radiative tables require Ebeam=10.38 GeV'
+             write(6,*) '       requested Ebeam (GeV)=',ebeam_model
+             stop 'unsupported radiative-correction beam energy'
+          endif
+          call INIT_RADCORR_3HE(sf_fit_imod,ebeam_model,RADCORR_STAT)
+          if (.not.RADCORR_STAT) then
+             stop '3He radiative-table initialization failed'
+          endif
+       endif
+
 
 	print *, 'ebeam_model=', ebeam_model
 	print *, 'beam_energy=', beam_energy
 		print *, 'Z_tar=', Z_tar
 		print *, 'tar_atom_num=', tar_atom_num
 		print *, 'sf_model_flag=', sf_model_flag
+		print *, 'sf_fit_imod=', sf_fit_imod
+		print *, 'radcorr_flag=', radcorr_flag
+		if (radcorr_flag.eq.1) then
+		   print *, 'rad_weight_factor = XSrad_unp / XSborn_unp'
+		endif
 		print *, 'beam_current_uA=', beam_current_uA
 	print *, 'target_dens_m3=', target_dens_m3
 		if(hut_ntuple) then
@@ -834,11 +906,14 @@ C Initialize F1F2IN21-derived quantities for this event
       F1_model     = 0.d0
       F2_model     = 0.d0
       FL_model     = 0.d0
-      SF_STAT      = .false.
-      mott_nb      = 0.d0
-      sigma_f1f2   = 0.d0
-      sigma_weight = 0.d0
-      rate_f1f2    = 0.d0
+       SF_STAT      = .false.
+       RADCORR_STAT = .true.
+       mott_nb      = 0.d0
+       sigma_f1f2   = 0.d0
+       sigma_born_f1f2 = 0.d0
+       sigma_weight = 0.d0
+       rate_f1f2    = 0.d0
+       rad_weight_factor = 1.d0
 
 C Inclusive structure-function model (F1F2IN21) for acceptance weighting
       if (ebeam_model.gt.0.d0) then
@@ -934,6 +1009,7 @@ C           Default behavior (including 3He when sf_model_flag=0)
 C --- Cross section and (optional) absolute rate (analogous to old block) ---
        mott_nb      = 0.d0
        sigma_f1f2   = 0.d0
+       sigma_born_f1f2 = 0.d0
        sigma_weight = 0.d0
        rate_f1f2    = 0.d0
 	
@@ -953,8 +1029,31 @@ C Mott in nb/sr (GeV^-2 converted to nb via gev2_to_nb)
      >           (2.d0*ebeam_model*sin(th2)*sin(th2)))**2)*gev2_to_nb
 	             w1_model      = F1_model/Mp_GeV
 	             w2_inel_model = F2_model/nu_model
-	             sigma_f1f2    = mott_nb*(w2_inel_model
+             sigma_born_f1f2 = mott_nb*(w2_inel_model
      >                             + 2.d0*w1_model*tan2)
+             rad_weight_factor = 1.d0
+             if (radcorr_flag.eq.1) then
+                n_radcorr_req = n_radcorr_req + 1
+                call GET_RADCORR_3HE(sf_fit_imod,theta_model,
+     >               nu_model,rad_weight_factor,RADCORR_STAT)
+                if (.not.RADCORR_STAT) then
+                   n_radcorr_fail = n_radcorr_fail + 1
+                   write(6,*) 'ERROR: 3He radiative lookup failed'
+                   write(6,*) ' trial=',Itrial,' SF=',sf_fit_imod
+                   write(6,*) ' theta (deg)=',theta_model
+                   write(6,*) ' nu (GeV)=',nu_model
+                   stop '3He radiative lookup outside valid table domain'
+                endif
+                n_radcorr_ok = n_radcorr_ok + 1
+                rad_weight_sum = rad_weight_sum + rad_weight_factor
+                if (rad_weight_factor.lt.rad_weight_min) then
+                   rad_weight_min = rad_weight_factor
+                endif
+                if (rad_weight_factor.gt.rad_weight_max) then
+                   rad_weight_max = rad_weight_factor
+                endif
+             endif
+             sigma_f1f2 = sigma_born_f1f2*rad_weight_factor
 
 C=======================================================================
 C Weight for generation in (delta, xptar, yptar)
@@ -1010,10 +1109,15 @@ C       convert nb -> m^2 and keep the raw numerator.
        endif
 
        if ((Itrial.le.1).or.(mod(Itrial,50000).le.3)) then
-          write(*,'("trial #",i8," xsec(nb)=",G14.5,
+           write(*,'("trial #",i8," xsec(nb)=",G14.5,
      >      " weight=",G14.5," rate(Hz)=",G14.5," at x,Q2=",2F8.4)')
      >      Itrial, sigma_f1f2, sigma_weight, rate_f1f2,
      >      xbj_model, Q2_model
+           if (radcorr_flag.eq.1) then
+              write(*,'("  rad_weight_factor=",G14.5,
+     >                  " sigma_born_f1f2=",G14.5)')
+     >             rad_weight_factor,sigma_born_f1f2
+           endif
        endif
 	
 C Case 1 : extended cryo target:
@@ -1299,6 +1403,25 @@ C Close NTUPLE file.
      >            ntuple_weight_entries
 	write (6,*) 'Ntuple zero-weight entries written = ',
      >            ntuple_zero_weight_entries	
+	if (radcorr_flag.eq.1) then
+	   write (chanout,*) '3He radiative lookup requests = ',
+     >                  n_radcorr_req
+	   write (chanout,*) '3He radiative lookup successes = ',
+     >                  n_radcorr_ok
+	   write (chanout,*) '3He radiative lookup failures = ',
+     >                  n_radcorr_fail
+	   write (6,*) '3He radiative lookup requests = ',n_radcorr_req
+	   write (6,*) '3He radiative lookup successes = ',n_radcorr_ok
+	   write (6,*) '3He radiative lookup failures = ',n_radcorr_fail
+	   if (n_radcorr_ok.gt.0) then
+	      write (chanout,*) '3He rad_weight_factor min/max/mean = ',
+     >      rad_weight_min,rad_weight_max,
+     >      rad_weight_sum/dble(n_radcorr_ok)
+	      write (6,*) '3He rad_weight_factor min/max/mean = ',
+     >      rad_weight_min,rad_weight_max,
+     >      rad_weight_sum/dble(n_radcorr_ok)
+	   endif
+	endif
 			if (use_good_target) then
 		   write (chanout,1017) target_good_events,armSTOP_successes
 		   if (armSTOP_successes.lt.target_good_events) then
