@@ -30,7 +30,13 @@ rad_weight_factor = XSrad_unp / XSborn_unp
 
 It is bilinearly interpolated in `(theta, nu)`, with no extrapolation.  The
 finite upper endpoint is 9910 MeV; the lower endpoint depends on angle.  A
-lookup must be valid in every table used for its angle interpolation.
+lookup between two angles succeeds only over their overlapping `nu` domain:
+the effective lower/upper limits are the maximum/minimum of their individual
+finite limits.
+
+Every finite grid is validated during initialization as 1 MeV spaced.  The
+production reader therefore uses direct `nu` indexing after exact grid-point
+and global-endpoint checks; only the selected SF model's 15 tables are loaded.
 
 Historical A1n documentation may use `radcorr` for the inverse ratio
 `XSborn_unp / XSrad_unp`.  This table reader deliberately uses the ratio above
@@ -44,3 +50,8 @@ python3 util/check_radcorr_tables.py \
 cd util/radcorr && make
 cd ../../src && ../util/radcorr/test_get_radcorr_3he
 ```
+
+From `src/`, the integrated targets are `make test_radcorr_tables`,
+`make test_radcorr_reader`, `make test_radcorr_born`, and `make test_radcorr`.
+Use `make clean_radcorr_tables` only when a fresh archive extraction is needed;
+ordinary `make clean` intentionally preserves local table data.

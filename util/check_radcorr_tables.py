@@ -15,6 +15,8 @@ ARCHIVE_NAME = "Newfit_20260710_fullxquad_15angles.tar.gz"
 ANGLES = tuple(26.0 + 0.5 * index for index in range(15))
 MODELS = tuple(f"SF{index}" for index in range(1, 6))
 REQUIRED = ("Ebeam", "nu", "XSborn_unp", "XSrad_unp")
+RAD_DNU_MEV = 1.0
+RAD_DNU_TOL = 1.0e-6
 
 
 def csv_sources(location: Path):
@@ -66,8 +68,14 @@ def validate_table(name, stream):
         if valid:
             if saw_invalid:
                 raise ValueError(f"non-contiguous finite ratio domain: {name}")
-            if previous_nu is not None and nu <= previous_nu:
-                raise ValueError(f"non-monotonic nu grid: {name}")
+            if previous_nu is not None:
+                dnu = nu - previous_nu
+                if dnu <= 0.0:
+                    raise ValueError(f"non-monotonic nu grid: {name}")
+                if abs(dnu - RAD_DNU_MEV) > RAD_DNU_TOL:
+                    raise ValueError(
+                        f"nonuniform finite nu grid (dnu={dnu} MeV): {name}"
+                    )
             valid_nu.append(nu)
             previous_nu = nu
             saw_valid = True
@@ -77,7 +85,7 @@ def validate_table(name, stream):
         raise ValueError(f"fewer than two finite rows: {name}")
     if valid_nu[-1] != 9910.0:
         raise ValueError(f"finite upper nu is not 9910 MeV: {name}")
-    return row_count, valid_nu[0], valid_nu[-1], len(valid_nu)
+    return row_count, valid_nu[0], valid_nu[-1], len(valid_nu), RAD_DNU_MEV
 
 
 def main():
@@ -96,6 +104,8 @@ def main():
     for name, stream in csv_sources(args.location):
         try:
             model, angle = parse_name(name)
+            if (model, angle) in tables:
+                raise ValueError(f"duplicate table for {(model, angle)}: {name}")
             tables[model, angle] = validate_table(name, stream)
         finally:
             stream.close()
@@ -112,10 +122,10 @@ def main():
     for angle, summaries in sorted(by_angle.items()):
         if len(set(summaries)) != 1:
             raise ValueError(f"SF grids differ at {angle:.1f} degrees")
-        rows, nu_min, nu_max, valid_rows = summaries[0]
-        print(f"{angle:4.1f} deg: rows={rows}, finite nu={nu_min:.0f}-{nu_max:.0f} MeV, "
-              f"finite rows={valid_rows}")
-    print("PASS: 75 tables, five SF models, 15 angles/model, finite ratios contiguous")
+        rows, nu_min, nu_max, valid_rows, dnu = summaries[0]
+        print(f"{angle:4.1f} deg: nu_min={nu_min:.0f}, nu_max={nu_max:.0f} MeV, "
+              f"N={valid_rows}, dnu={dnu:.0f} MeV, rows={rows}")
+    print("PASS: 75 tables validated; finite ratios contiguous and 1 MeV spaced")
 
 
 if __name__ == "__main__":

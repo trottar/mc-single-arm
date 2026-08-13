@@ -8,22 +8,20 @@ Place the CSV tables required by `GETSF_F1F2fit` in this directory:
 - `Table_3He_F1F2_SF4.csv`
 - `Table_3He_F1F2_SF5.csv`
 
-The code now probes both:
-
-1. `sf_tables/` (runtime working directory)
-2. `src/interp/sf_tables/` (repo-local fallback)
-
-If none are found, `GETSF_F1F2fit` returns `STAT=.false.` and caller fallback logic is used.
+`GETSF_F1F2fit` reads these repo-local paths when `mc_single_arm` runs from
+`src/`.  If the files are absent, it returns `STAT=.false.`.
 
 
-## Automatic extraction during build
+## Archive preparation
 
-When you run `make` in `src/`, the `prepare_sf_tables` step now checks whether
-the CSVs already exist. If not, it attempts to extract one of:
+Normal `make` does not require any table archive.  Before using
+`SF model flag = 1`, run `make prepare_sf_tables` in `src/`.  The target checks
+all five CSVs and, if needed, extracts one of:
 
 - `interp/F1F221_3He_XZ_20250828_tables.tar.gz`
+- `interp/F1F221_3He_XZ_20250828_tables2.tar.gz`
 - `interp/F1F221_3He_XZ_20250828_tables.tar`
 - `interp/F1F221_3He_XZ_20250828_tables.tar.*` (split tar parts)
 
-into `interp/`, so `interp/sf_tables/` is populated automatically when the
-archives are present.
+The supplied `.tar.gz` contains an `outfiles_tmp/` prefix; the target strips it
+and places the CSVs directly in `interp/sf_tables/`.

@@ -112,10 +112,36 @@ sigma_f1f2        = sigma_born_f1f2 * rad_weight_factor
 schema is unchanged.  There is no extrapolation outside the table coverage:
 26--33 degrees and the finite, angle-dependent `nu` ranges.
 
-The radiative archive is optional for ordinary builds.  To prepare it, place
-`Newfit_20260710_fullxquad_15angles.tar.gz` in `src/interp/` and run
-`make prepare_radcorr_tables` from `src/`.  The archive uses MeV for `Ebeam`
-and `nu`; the MC passes event `nu` in GeV and converts it only at lookup.
+Both table archives are optional for ordinary builds.  Before a run using
+`SF model flag = 1`, place `F1F221_3He_XZ_20250828_tables.tar.gz` in
+`src/interp/` and run `make prepare_sf_tables` from `src/`.  Before an
+RC-enabled run, place `Newfit_20260710_fullxquad_15angles.tar.gz` there and
+run `make prepare_radcorr_tables`.  The radiative archive uses MeV for
+`Ebeam` and `nu`; the MC passes event `nu` in GeV and converts it only at
+lookup.
+
+The selected model's fifteen tables are loaded once.  Their finite `nu` grids
+are validated as 1-MeV spaced and are accessed by direct indexing, with no
+per-event table scan.  Between angular tables, `nu` must be within both tables'
+finite ranges: the lower limit is angle dependent and the current common upper
+limit is 9910 MeV.  No angular or `nu` extrapolation is performed.
+
+Useful optional validation targets from `src/` are:
+
+```text
+make test_radcorr_tables
+make test_radcorr_reader
+make test_radcorr_born
+make test_radcorr
+```
+
+The final target requires both local table archives and a Fortran compiler.
+For short integration and timing checks after building `src/mc_single_arm`, run
+`util/radcorr/run_radcorr_smoke.sh [trials]`; its default is 100000 trials and
+it writes disposable temporary inputs plus retained `runout/radcorr_smoke_*`
+logs.  It narrows the generated `dp/p` range to keep the smoke events inside
+the supplied correction domain, then reports SF1/SF3 Born and radiated runs
+plus SF2/SF4/SF5 radiated selections.
 
 Historical A1n material sometimes calls `sigma_Born / sigma_rad` "radcorr".
 This MC intentionally uses the inverse `rad_weight_factor` because it converts

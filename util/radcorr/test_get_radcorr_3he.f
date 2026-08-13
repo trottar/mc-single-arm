@@ -23,6 +23,31 @@ C Run this executable from src/ so its relative table paths resolve.
       CALL ASSERT_CLOSE('SF1 nu interpolation value',RMID,EXPECTED,
      >                  1.D-12,NFAIL)
 
+C Direct-index checks: exact point, midpoint, and lower/upper interiors.
+      CALL GET_RADCORR_3HE(1,30.0D0,6.100D0,R,STAT)
+      CALL ASSERT_TRUE('SF1 exact 6100 MeV point',STAT,NFAIL)
+      EXPECTED=1.9330D-3/2.6802D-3
+      CALL ASSERT_CLOSE('SF1 exact 6100 MeV ratio',R,EXPECTED,
+     >                  1.D-12,NFAIL)
+      CALL GET_RADCORR_3HE(1,30.0D0,6.1005D0,R,STAT)
+      CALL ASSERT_TRUE('SF1 6100.5 MeV midpoint',STAT,NFAIL)
+      EXPECTED=0.5D0*(1.9330D-3/2.6802D-3+
+     >                 1.9501D-3/2.7021D-3)
+      CALL ASSERT_CLOSE('SF1 6100.5 MeV ratio',R,EXPECTED,
+     >                  1.D-12,NFAIL)
+      CALL GET_RADCORR_3HE(1,30.0D0,6.00725D0,R,STAT)
+      CALL ASSERT_TRUE('SF1 lower interior point',STAT,NFAIL)
+      EXPECTED=0.75D0*(1.1542D-5/3.8235D-4)+
+     >         0.25D0*(2.0685D-5/6.8522D-4)
+      CALL ASSERT_CLOSE('SF1 lower interior ratio',R,EXPECTED,
+     >                  1.D-12,NFAIL)
+      CALL GET_RADCORR_3HE(1,30.0D0,9.90975D0,R,STAT)
+      CALL ASSERT_TRUE('SF1 upper interior point',STAT,NFAIL)
+      EXPECTED=0.25D0*(2.2699D3/8.2300D0)+
+     >         0.75D0*(1.0108D4/8.2416D0)
+      CALL ASSERT_CLOSE('SF1 upper interior ratio',R,EXPECTED,
+     >                  1.D-10,NFAIL)
+
       CALL GET_RADCORR_3HE(1,30.0D0,6.100D0,RLOW,STAT)
       CALL ASSERT_TRUE('SF1 lower angle point',STAT,NFAIL)
       CALL GET_RADCORR_3HE(1,30.5D0,6.100D0,RHIGH,STAT)
@@ -54,8 +79,17 @@ C Exact angle and nu endpoints must not require an out-of-range neighbor.
       CALL ASSERT_FALSE('angle below coverage',STAT,NFAIL)
       CALL GET_RADCORR_3HE(1,33.001D0,6.483D0,R,STAT)
       CALL ASSERT_FALSE('angle above coverage',STAT,NFAIL)
+      CALL GET_RADCORR_3HE(1,30.0D0,6.006D0,R,STAT)
+      CALL ASSERT_FALSE('nu below finite coverage',STAT,NFAIL)
       CALL GET_RADCORR_3HE(1,30.0D0,9.911D0,R,STAT)
       CALL ASSERT_FALSE('nu above finite coverage',STAT,NFAIL)
+
+      CALL INIT_RADCORR_3HE(2,10.38D0,STAT)
+      CALL ASSERT_TRUE('SF2 initialization',STAT,NFAIL)
+      CALL GET_RADCORR_3HE(2,30.0D0,6.007D0,R,STAT)
+      CALL ASSERT_TRUE('SF2 exact table point',STAT,NFAIL)
+      EXPECTED=1.1361D-5/3.7638D-4
+      CALL ASSERT_CLOSE('SF2 exact ratio',R,EXPECTED,1.D-12,NFAIL)
 
       CALL INIT_RADCORR_3HE(3,10.38D0,STAT)
       CALL ASSERT_TRUE('SF3 initialization',STAT,NFAIL)
@@ -63,6 +97,13 @@ C Exact angle and nu endpoints must not require an out-of-range neighbor.
       CALL ASSERT_TRUE('SF3 exact table point',STAT,NFAIL)
       EXPECTED=2.1172D-5/7.0138D-4
       CALL ASSERT_CLOSE('SF3 exact ratio',R,EXPECTED,1.D-12,NFAIL)
+
+      CALL INIT_RADCORR_3HE(4,10.38D0,STAT)
+      CALL ASSERT_TRUE('SF4 initialization',STAT,NFAIL)
+      CALL GET_RADCORR_3HE(4,30.0D0,6.007D0,R,STAT)
+      CALL ASSERT_TRUE('SF4 exact table point',STAT,NFAIL)
+      EXPECTED=1.0832D-5/3.5885D-4
+      CALL ASSERT_CLOSE('SF4 exact ratio',R,EXPECTED,1.D-12,NFAIL)
 
       CALL INIT_RADCORR_3HE(5,10.38D0,STAT)
       CALL ASSERT_TRUE('SF5 initialization',STAT,NFAIL)

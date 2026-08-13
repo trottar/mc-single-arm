@@ -97,6 +97,7 @@ C --- Added: cross section (optional) absolute rate, analogous to old script ---
 	real*8 sigma_f1f2, sigma_born_f1f2, sigma_weight, rate_f1f2
 	real*8 rad_weight_factor, rad_weight_min, rad_weight_max
 	real*8 rad_weight_sum
+	real*8 rad_theta_min,rad_theta_max,rad_nu_min,rad_nu_max
         integer*8 n_radcorr_req,n_radcorr_ok,n_radcorr_fail
 	real*8 th2, p_spec_GeV, targ_len_m, jac_ep
 	real*8 n_areal_m2, lumi_per_C
@@ -189,6 +190,10 @@ C ================================ Executable Code =============================
         rad_weight_sum = 0.D0
         rad_weight_min = 1.D99
         rad_weight_max = -1.D99
+        rad_theta_min = 1.D99
+        rad_theta_max = -1.D99
+        rad_nu_min = 1.D99
+        rad_nu_max = -1.D99
 
 C Initialize
 C using SIMC unstructured version
@@ -1034,6 +1039,18 @@ C Mott in nb/sr (GeV^-2 converted to nb via gev2_to_nb)
              rad_weight_factor = 1.d0
              if (radcorr_flag.eq.1) then
                 n_radcorr_req = n_radcorr_req + 1
+                if (theta_model.lt.rad_theta_min) then
+                   rad_theta_min = theta_model
+                endif
+                if (theta_model.gt.rad_theta_max) then
+                   rad_theta_max = theta_model
+                endif
+                if (nu_model.lt.rad_nu_min) then
+                   rad_nu_min = nu_model
+                endif
+                if (nu_model.gt.rad_nu_max) then
+                   rad_nu_max = nu_model
+                endif
                 call GET_RADCORR_3HE(sf_fit_imod,theta_model,
      >               nu_model,rad_weight_factor,RADCORR_STAT)
                 if (.not.RADCORR_STAT) then
@@ -1420,6 +1437,14 @@ C Close NTUPLE file.
 	      write (6,*) '3He rad_weight_factor min/max/mean = ',
      >      rad_weight_min,rad_weight_max,
      >      rad_weight_sum/dble(n_radcorr_ok)
+	      write (chanout,*) '3He RC-request theta min/max (deg) = ',
+     >      rad_theta_min,rad_theta_max
+	      write (chanout,*) '3He RC-request nu min/max (GeV) = ',
+     >      rad_nu_min,rad_nu_max
+	      write (6,*) '3He RC-request theta min/max (deg) = ',
+     >      rad_theta_min,rad_theta_max
+	      write (6,*) '3He RC-request nu min/max (GeV) = ',
+     >      rad_nu_min,rad_nu_max
 	   endif
 	endif
 			if (use_good_target) then

@@ -146,18 +146,33 @@ endif
 
 all: mc_single_arm 
 
-mc_single_arm: prepare_sf_tables $(my_objs) Makefile mc_single_arm.o
+mc_single_arm: $(my_objs) Makefile mc_single_arm.o
 	$(F77) -o $@ $(FFLAGS) mc_single_arm.o $(my_objs) $(OTHERLIBS)
 
 prepare_sf_tables:
 	@set -e; \
 	tables_dir="interp/sf_tables"; \
-	mkdir -p "$$tables_dir"; \
-	if ls "$$tables_dir"/Table_3He_F1F2_SF*.csv >/dev/null 2>&1; then \
+	sf_tables_complete() { \
+	  for sf in 1 2 3 4 5; do \
+	    test -f "$$tables_dir/Table_3He_F1F2_SF$$sf.csv" || return 1; \
+	  done; \
+	}; \
+	missing_sf_tables() { \
+	  for sf in 1 2 3 4 5; do \
+	    test -f "$$tables_dir/Table_3He_F1F2_SF$$sf.csv" || \
+	      echo "  missing: Table_3He_F1F2_SF$$sf.csv"; \
+	  done; \
+	}; \
+	if sf_tables_complete; then \
 	  echo "3He SF CSV tables already present in $$tables_dir"; \
 	  exit 0; \
 	fi; \
-	if [ -f "interp/F1F221_3He_XZ_20250828_tables2.tar.gz" ]; then \
+	mkdir -p "$$tables_dir"; \
+	if [ -f "interp/F1F221_3He_XZ_20250828_tables.tar.gz" ]; then \
+	  echo "Extracting interp/F1F221_3He_XZ_20250828_tables.tar.gz"; \
+	  tar -xzf "interp/F1F221_3He_XZ_20250828_tables.tar.gz" \
+	    -C "$$tables_dir" --strip-components=1; \
+	elif [ -f "interp/F1F221_3He_XZ_20250828_tables2.tar.gz" ]; then \
 	  echo "Extracting interp/F1F221_3He_XZ_20250828_tables2.tar.gz"; \
 	  tar -xzf "interp/F1F221_3He_XZ_20250828_tables2.tar.gz" -C "interp"; \
 	elif [ -f "interp/F1F221_3He_XZ_20250828_tables.tar" ]; then \
@@ -167,24 +182,72 @@ prepare_sf_tables:
 	  echo "Extracting split tarball interp/F1F221_3He_XZ_20250828_tables.tar.*"; \
 	  cat interp/F1F221_3He_XZ_20250828_tables.tar.* | tar -xf - -C "interp"; \
 	else \
-	  echo "No 3He SF table archive found under src/interp; relying on existing CSVs."; \
+	  echo "ERROR: no 3He SF table archive found under src/interp"; \
+	  missing_sf_tables; \
+	  exit 1; \
+	fi; \
+	if ! sf_tables_complete; then \
+	  echo "ERROR: 3He SF table extraction is incomplete in $$tables_dir"; \
+	  missing_sf_tables; \
+	  exit 1; \
 	fi
 
 prepare_radcorr_tables:
 	@set -e; \
 	tables_dir="interp/radcorr_tables/Newfit_20260710_fullxquad_15angles"; \
-	if [ -f "$$tables_dir/SF1_G1F1cmplt_QE95/radiated_data_26.0deg_short.csv" ]; then \
+	archive="interp/Newfit_20260710_fullxquad_15angles.tar.gz"; \
+	radcorr_tables_complete() { \
+	  for sf in 1 2 3 4 5; do \
+	    for angle in 26.0 26.5 27.0 27.5 28.0 28.5 29.0 29.5 30.0 30.5 31.0 31.5 32.0 32.5 33.0; do \
+	      test -f "$$tables_dir/SF$${sf}_G1F1cmplt_QE95/radiated_data_$${angle}deg_short.csv" || return 1; \
+	    done; \
+	  done; \
+	}; \
+	missing_radcorr_tables() { \
+	  for sf in 1 2 3 4 5; do \
+	    for angle in 26.0 26.5 27.0 27.5 28.0 28.5 29.0 29.5 30.0 30.5 31.0 31.5 32.0 32.5 33.0; do \
+	      relpath="SF$${sf}_G1F1cmplt_QE95/radiated_data_$${angle}deg_short.csv"; \
+	      test -f "$$tables_dir/$$relpath" || \
+	        echo "  missing: SF$$sf angle $$angle"; \
+	    done; \
+	  done; \
+	}; \
+	if radcorr_tables_complete; then \
 	  echo "3He radiative-weight CSV tables already present in $$tables_dir"; \
 	  exit 0; \
 	fi; \
-	if [ -f "interp/Newfit_20260710_fullxquad_15angles.tar.gz" ]; then \
-	  echo "Extracting interp/Newfit_20260710_fullxquad_15angles.tar.gz"; \
-	  mkdir -p "interp/radcorr_tables"; \
-	  tar -xzf "interp/Newfit_20260710_fullxquad_15angles.tar.gz" -C "interp/radcorr_tables"; \
-	else \
-	  echo "No 3He radiative-weight archive found under src/interp."; \
-	  echo "Place Newfit_20260710_fullxquad_15angles.tar.gz there, then run make prepare_radcorr_tables."; \
+	if [ ! -f "$$archive" ]; then \
+	  echo "ERROR: 3He radiative-weight tables are incomplete in $$tables_dir"; \
+	  missing_radcorr_tables; \
+	  echo "Archive is absent; preserving the partial extracted directory."; \
+	  exit 1; \
+	fi; \
+	echo "Re-extracting incomplete 3He radiative-weight tables"; \
+	rm -rf "$$tables_dir"; \
+	mkdir -p "interp/radcorr_tables"; \
+	tar -xzf "$$archive" -C "interp/radcorr_tables"; \
+	if ! radcorr_tables_complete; then \
+	  echo "ERROR: 3He radiative-weight archive extraction is incomplete"; \
+	  missing_radcorr_tables; \
+	  exit 1; \
 	fi
+
+clean_radcorr_tables:
+	rm -rf interp/radcorr_tables/Newfit_20260710_fullxquad_15angles
+
+test_radcorr_tables: prepare_radcorr_tables
+	python3 ../util/check_radcorr_tables.py interp/radcorr_tables/Newfit_20260710_fullxquad_15angles
+	python3 ../util/test_check_radcorr_tables.py
+
+test_radcorr_reader: prepare_radcorr_tables
+	$(MAKE) -C ../util/radcorr test_get_radcorr_3he
+	../util/radcorr/test_get_radcorr_3he
+
+test_radcorr_born: prepare_sf_tables prepare_radcorr_tables
+	$(MAKE) -C ../util/radcorr check_born_consistency
+	../util/radcorr/check_born_consistency
+
+test_radcorr: test_radcorr_tables test_radcorr_reader test_radcorr_born
 
 clean:
 	rm -f *.o $(H)*.o $(SH)*.o $(SHARE)*.o $(CH)*.o mc_single_arm

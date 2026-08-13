@@ -8,5 +8,8 @@ src/mc_single_arm
 F1F221_3He_XZ_20250828_src.tar
 F1F221_3He_XZ_20250828_tables.tar.gz
 Newfit_20260710_fullxquad_15angles.tar.gz
+src/interp/sf_tables/Table_3He_F1F2_SF*.csv
 src/interp/radcorr_tables/Newfit_20260710_fullxquad_15angles/
 util/radcorr/test_get_radcorr_3he
+util/radcorr/check_born_consistency
+__pycache__/

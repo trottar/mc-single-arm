@@ -12,15 +12,17 @@ C----------------------------------------------------------------------
       REAL*8 EBEAM_GEV,RAD_ANGLE(NRAD_ANG)
       REAL*8 RAD_NU(NRAD_NU_MAX,NRAD_ANG)
       REAL*8 RAD_RATIO(NRAD_NU_MAX,NRAD_ANG)
-      REAL*8 RAD_TABLE_EBEAM,COL(17),PREV_NU
+      REAL*8 RAD_TABLE_EBEAM,COL(17),PREV_NU,DNU
       REAL*8 RAD_EBEAM_GEV,RAD_EBEAM_MEV,RAD_EBEAM_TOL_MEV
+      REAL*8 RAD_DNU_MEV,RAD_DNU_TOL
       CHARACTER*200 FILENAME
       CHARACTER*512 LINE
       LOGICAL STAT,RAD_INITIALIZED,VALID,SAW_VALID,SAW_INVALID
       COMMON /RADCORR_3HE_CACHE/ RAD_ANGLE,RAD_NU,RAD_RATIO,
      > RAD_TABLE_EBEAM,RAD_NNU,RAD_LOADED_IMOD,RAD_INITIALIZED
       PARAMETER (RAD_EBEAM_GEV=10.38D0,RAD_EBEAM_MEV=10380.D0,
-     >           RAD_EBEAM_TOL_MEV=0.1D0)
+     >           RAD_EBEAM_TOL_MEV=0.1D0,RAD_DNU_MEV=1.D0,
+     >           RAD_DNU_TOL=1.D-6)
 
       STAT=.FALSE.
       IF (IMOD0.LT.1 .OR. IMOD0.GT.5) THEN
@@ -122,6 +124,17 @@ C selected 15 tables without involving the event lookup routine.
                CLOSE(UNITNO)
                GOTO 900
             ENDIF
+            IF (NVALID.GT.1) THEN
+               DNU=COL(2)-PREV_NU
+               IF (DABS(DNU-RAD_DNU_MEV).GT.RAD_DNU_TOL) THEN
+                  WRITE(6,*) 'ERROR: nonuniform 3He radcorr nu grid:'
+                  WRITE(6,*) FILENAME
+                  WRITE(6,*) ' expected dnu (MeV)=',RAD_DNU_MEV
+                  WRITE(6,*) ' observed dnu (MeV)=',DNU
+                  CLOSE(UNITNO)
+                  GOTO 900
+               ENDIF
+            ENDIF
             RAD_NU(NVALID,IA)=COL(2)
             RAD_RATIO(NVALID,IA)=COL(10)/COL(5)
             IF (RAD_RATIO(NVALID,IA).NE.RAD_RATIO(NVALID,IA) .OR.
@@ -194,8 +207,13 @@ C----------------------------------------------------------------------
       ENDIF
 
       THETA_LOOKUP=THETA_DEG
+      IA1=0
+      IA2=0
       IF (THETA_LOOKUP.LT.RAD_ANGLE(1)-ANG_TOL .OR.
-     >    THETA_LOOKUP.GT.RAD_ANGLE(NRAD_ANG)+ANG_TOL) RETURN
+     >    THETA_LOOKUP.GT.RAD_ANGLE(NRAD_ANG)+ANG_TOL) THEN
+         CALL RADCORR_REPORT_DOMAIN(THETA_DEG,NU_GEV,IA1,IA2)
+         RETURN
+      ENDIF
       IF (DABS(THETA_LOOKUP-RAD_ANGLE(1)).LE.ANG_TOL) THEN
          IA1=1
          IA2=1
@@ -205,8 +223,6 @@ C----------------------------------------------------------------------
          IA2=NRAD_ANG
          THETA_LOOKUP=RAD_ANGLE(NRAD_ANG)
       ELSE
-         IA1=0
-         IA2=0
          DO IA=1,NRAD_ANG
             IF (DABS(THETA_LOOKUP-RAD_ANGLE(IA)).LE.ANG_TOL) THEN
                IA1=IA
@@ -226,17 +242,26 @@ C----------------------------------------------------------------------
       ENDIF
 
   400 CONTINUE
-      IF (IA1.EQ.0 .OR. IA2.EQ.0) RETURN
+      IF (IA1.EQ.0 .OR. IA2.EQ.0) THEN
+         CALL RADCORR_REPORT_DOMAIN(THETA_DEG,NU_GEV,IA1,IA2)
+         RETURN
+      ENDIF
       NU_TABLE=1000.D0*NU_GEV
       CALL RADCORR_NU_LOOKUP(IA1,NU_TABLE,R1,STAT1)
-      IF (.NOT.STAT1) RETURN
+      IF (.NOT.STAT1) THEN
+         CALL RADCORR_REPORT_DOMAIN(THETA_DEG,NU_GEV,IA1,IA2)
+         RETURN
+      ENDIF
       IF (IA2.EQ.IA1) THEN
          RAD_WEIGHT_FACTOR=R1
          STAT=.TRUE.
          RETURN
       ENDIF
       CALL RADCORR_NU_LOOKUP(IA2,NU_TABLE,R2,STAT2)
-      IF (.NOT.STAT2) RETURN
+      IF (.NOT.STAT2) THEN
+         CALL RADCORR_REPORT_DOMAIN(THETA_DEG,NU_GEV,IA1,IA2)
+         RETURN
+      ENDIF
       FRAC=(THETA_LOOKUP-RAD_ANGLE(IA1)) /
      >     (RAD_ANGLE(IA2)-RAD_ANGLE(IA1))
       RAD_WEIGHT_FACTOR=R1+FRAC*(R2-R1)
@@ -260,11 +285,11 @@ C----------------------------------------------------------------------
       REAL*8 NU_TABLE,RVALUE,RAD_ANGLE(NRAD_ANG)
       REAL*8 RAD_NU(NRAD_NU_MAX,NRAD_ANG)
       REAL*8 RAD_RATIO(NRAD_NU_MAX,NRAD_ANG),RAD_TABLE_EBEAM
-      REAL*8 NU_LOOKUP,NU_TOL,FRAC
+      REAL*8 NU_LOOKUP,NU_TOL,FRAC,XIDX,RAD_DNU_MEV
       LOGICAL STAT,RAD_INITIALIZED
       COMMON /RADCORR_3HE_CACHE/ RAD_ANGLE,RAD_NU,RAD_RATIO,
      > RAD_TABLE_EBEAM,RAD_NNU,RAD_LOADED_IMOD,RAD_INITIALIZED
-      PARAMETER (NU_TOL=1.D-6)
+      PARAMETER (NU_TOL=1.D-6,RAD_DNU_MEV=1.D0)
 
       STAT=.FALSE.
       RVALUE=1.D0
@@ -284,17 +309,62 @@ C----------------------------------------------------------------------
          STAT=.TRUE.
          RETURN
       ENDIF
-      DO J=1,NN-1
-         IF (NU_LOOKUP.GT.RAD_NU(J,IA) .AND.
-     >       NU_LOOKUP.LT.RAD_NU(J+1,IA)) THEN
-            FRAC=(NU_LOOKUP-RAD_NU(J,IA)) /
-     >           (RAD_NU(J+1,IA)-RAD_NU(J,IA))
-            RVALUE=RAD_RATIO(J,IA)+FRAC*
-     >              (RAD_RATIO(J+1,IA)-RAD_RATIO(J,IA))
-            STAT=.TRUE.
-            RETURN
-         ENDIF
-      ENDDO
+      XIDX=(NU_LOOKUP-RAD_NU(1,IA))/RAD_DNU_MEV
+      J=INT(XIDX)+1
+      IF (J.LT.1 .OR. J.GE.NN) RETURN
+      IF (NU_LOOKUP.LT.RAD_NU(J,IA)-NU_TOL .OR.
+     >    NU_LOOKUP.GT.RAD_NU(J+1,IA)+NU_TOL) RETURN
+      IF (DABS(NU_LOOKUP-RAD_NU(J,IA)).LE.NU_TOL) THEN
+         RVALUE=RAD_RATIO(J,IA)
+         STAT=.TRUE.
+         RETURN
+      ENDIF
+      IF (DABS(NU_LOOKUP-RAD_NU(J+1,IA)).LE.NU_TOL) THEN
+         RVALUE=RAD_RATIO(J+1,IA)
+         STAT=.TRUE.
+         RETURN
+      ENDIF
+      FRAC=(NU_LOOKUP-RAD_NU(J,IA)) /
+     >     (RAD_NU(J+1,IA)-RAD_NU(J,IA))
+      RVALUE=RAD_RATIO(J,IA)+FRAC*
+     >       (RAD_RATIO(J+1,IA)-RAD_RATIO(J,IA))
+      STAT=.TRUE.
+      RETURN
+      END
+
+
+      SUBROUTINE RADCORR_REPORT_DOMAIN(THETA_DEG,NU_GEV,IA1,IA2)
+C Diagnostic only: IA1/IA2 come from GET_RADCORR_3HE so this report
+C cannot disagree with the production angle-bracketing decision.
+      IMPLICIT NONE
+      INTEGER NRAD_ANG,NRAD_NU_MAX
+      PARAMETER (NRAD_ANG=15,NRAD_NU_MAX=5200)
+      INTEGER IA1,IA2,NN1,NN2
+      INTEGER RAD_NNU(NRAD_ANG),RAD_LOADED_IMOD
+      REAL*8 THETA_DEG,NU_GEV,RAD_ANGLE(NRAD_ANG)
+      REAL*8 RAD_NU(NRAD_NU_MAX,NRAD_ANG)
+      REAL*8 RAD_RATIO(NRAD_NU_MAX,NRAD_ANG),RAD_TABLE_EBEAM
+      LOGICAL RAD_INITIALIZED
+      COMMON /RADCORR_3HE_CACHE/ RAD_ANGLE,RAD_NU,RAD_RATIO,
+     > RAD_TABLE_EBEAM,RAD_NNU,RAD_LOADED_IMOD,RAD_INITIALIZED
+
+      WRITE(6,*) '3He radcorr requested theta (deg)=',THETA_DEG
+      WRITE(6,*) '3He radcorr requested nu (GeV)=',NU_GEV
+      IF (IA1.LT.1 .OR. IA2.LT.1) THEN
+         WRITE(6,*) '3He radcorr angle domain (deg)=',RAD_ANGLE(1),
+     >              RAD_ANGLE(NRAD_ANG)
+         RETURN
+      ENDIF
+      NN1=RAD_NNU(IA1)
+      NN2=RAD_NNU(IA2)
+      WRITE(6,*) '3He radcorr bracketing angles (deg)=',
+     >           RAD_ANGLE(IA1),RAD_ANGLE(IA2)
+      WRITE(6,*) '3He radcorr nu domain at lower angle (MeV)=',
+     >           RAD_NU(1,IA1),RAD_NU(NN1,IA1)
+      IF (IA2.NE.IA1) THEN
+         WRITE(6,*) '3He radcorr nu domain at upper angle (MeV)=',
+     >              RAD_NU(1,IA2),RAD_NU(NN2,IA2)
+      ENDIF
       RETURN
       END
 
