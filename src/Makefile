@@ -146,7 +146,10 @@ endif
 
 all: mc_single_arm 
 
-mc_single_arm: $(my_objs) Makefile mc_single_arm.o
+# The radiative-correction reader consumes extracted CSV tables at runtime.
+# Ensure a tarball-only checkout is prepared before building the executable;
+# prepare_radcorr_tables is a no-op when the complete table set is present.
+mc_single_arm: prepare_radcorr_tables $(my_objs) Makefile mc_single_arm.o
 	$(F77) -o $@ $(FFLAGS) mc_single_arm.o $(my_objs) $(OTHERLIBS)
 
 prepare_sf_tables:
