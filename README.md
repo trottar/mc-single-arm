@@ -115,8 +115,9 @@ schema is unchanged.  There is no extrapolation outside the table coverage:
 Both table archives are optional for ordinary builds.  Before a run using
 `SF model flag = 1`, place `F1F221_3He_XZ_20250828_tables.tar.gz` in
 `src/interp/` and run `make prepare_sf_tables` from `src/`.  Before an
-RC-enabled run, place `Newfit_20260710_fullxquad_15angles.tar.gz` there and
-run `make prepare_radcorr_tables`.  The radiative archive uses MeV for
+RC-enabled run, place `Newfit_20260710_fullxquad_15angles.tar.gz` in
+`src/interp/radcorr_tables/` and run `make prepare_radcorr_tables`.  The
+legacy `src/interp/` location is also accepted.  The radiative archive uses MeV for
 `Ebeam` and `nu`; the MC passes event `nu` in GeV and converts it only at
 lookup.
 

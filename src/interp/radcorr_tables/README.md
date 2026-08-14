@@ -2,12 +2,14 @@
 
 `get_radcorr_3he.f` uses tables extracted from
 `Newfit_20260710_fullxquad_15angles.tar.gz`.  Keep that archive in
-`src/interp/` and run:
+`src/interp/radcorr_tables/` and run:
 
 ```bash
 cd src
 make prepare_radcorr_tables
 ```
+
+The legacy `src/interp/` archive location is also accepted.
 
 The archive expands to:
 

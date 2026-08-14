@@ -153,7 +153,8 @@ mc_single_arm: maybe_prepare_radcorr_tables $(my_objs) Makefile mc_single_arm.o
 	$(F77) -o $@ $(FFLAGS) mc_single_arm.o $(my_objs) $(OTHERLIBS)
 
 maybe_prepare_radcorr_tables:
-	@if [ -f "interp/Newfit_20260710_fullxquad_15angles.tar.gz" ]; then \
+	@if [ -f "interp/radcorr_tables/Newfit_20260710_fullxquad_15angles.tar.gz" ] || \
+	     [ -f "interp/Newfit_20260710_fullxquad_15angles.tar.gz" ]; then \
 	  $(MAKE) prepare_radcorr_tables; \
 	else \
 	  echo "3He radiative-weight archive not present; skipping optional table preparation"; \
@@ -205,7 +206,12 @@ prepare_sf_tables:
 prepare_radcorr_tables:
 	@set -e; \
 	tables_dir="interp/radcorr_tables/Newfit_20260710_fullxquad_15angles"; \
-	archive="interp/Newfit_20260710_fullxquad_15angles.tar.gz"; \
+	archive=""; \
+	for candidate in \
+	  "interp/radcorr_tables/Newfit_20260710_fullxquad_15angles.tar.gz" \
+	  "interp/Newfit_20260710_fullxquad_15angles.tar.gz"; do \
+	  if [ -f "$$candidate" ]; then archive="$$candidate"; break; fi; \
+	done; \
 	radcorr_tables_complete() { \
 	  for sf in 1 2 3 4 5; do \
 	    for angle in 26.0 26.5 27.0 27.5 28.0 28.5 29.0 29.5 30.0 30.5 31.0 31.5 32.0 32.5 33.0; do \
@@ -229,10 +235,10 @@ prepare_radcorr_tables:
 	if [ ! -f "$$archive" ]; then \
 	  echo "ERROR: 3He radiative-weight tables are incomplete in $$tables_dir"; \
 	  missing_radcorr_tables; \
-	  echo "Archive is absent; preserving the partial extracted directory."; \
-	  exit 1; \
+		echo "Archive is absent; looked in interp/radcorr_tables and interp; preserving the partial extracted directory."; \
+		exit 1; \
 	fi; \
-	echo "Re-extracting incomplete 3He radiative-weight tables"; \
+	echo "Re-extracting incomplete 3He radiative-weight tables from $$archive"; \
 	rm -rf "$$tables_dir"; \
 	mkdir -p "interp/radcorr_tables"; \
 	tar -xzf "$$archive" -C "interp/radcorr_tables"; \

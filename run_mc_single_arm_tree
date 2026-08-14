@@ -15,9 +15,11 @@ set mc_tag="${1}${suffix}"
 
 cd src
 if ( "$radcorr_flag" == "1" ) then
-  if ( ! -f "interp/Newfit_20260710_fullxquad_15angles.tar.gz" ) then
-    echo "ERROR: radiative correction is enabled, but the table archive is absent from src/interp"
-    exit 1
+  if ( ! -f "interp/radcorr_tables/Newfit_20260710_fullxquad_15angles.tar.gz" ) then
+    if ( ! -f "interp/Newfit_20260710_fullxquad_15angles.tar.gz" ) then
+      echo "ERROR: radiative correction is enabled, but the table archive is absent from src/interp/radcorr_tables and src/interp"
+      exit 1
+    endif
   endif
 endif
 make clean
