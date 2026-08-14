@@ -146,11 +146,18 @@ endif
 
 all: mc_single_arm 
 
-# The radiative-correction reader consumes extracted CSV tables at runtime.
-# Ensure a tarball-only checkout is prepared before building the executable;
-# prepare_radcorr_tables is a no-op when the complete table set is present.
-mc_single_arm: prepare_radcorr_tables $(my_objs) Makefile mc_single_arm.o
+# If the optional radiative-correction archive is available, prepare its CSV
+# tables before building.  A build without that archive remains valid for
+# Born-only jobs; an RC-enabled job still requires the archive/table set.
+mc_single_arm: maybe_prepare_radcorr_tables $(my_objs) Makefile mc_single_arm.o
 	$(F77) -o $@ $(FFLAGS) mc_single_arm.o $(my_objs) $(OTHERLIBS)
+
+maybe_prepare_radcorr_tables:
+	@if [ -f "interp/Newfit_20260710_fullxquad_15angles.tar.gz" ]; then \
+	  $(MAKE) prepare_radcorr_tables; \
+	else \
+	  echo "3He radiative-weight archive not present; skipping optional table preparation"; \
+	fi
 
 prepare_sf_tables:
 	@set -e; \

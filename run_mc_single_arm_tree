@@ -5,6 +5,7 @@ module use /cvmfs/oasis.opensciencegrid.org/jlab/scicomp/sw/el9/modulefiles
 module load root/6.30.04-gcc11.4.0
 
 set sf_flag=`awk '/SF model flag/ {print $1; exit}' infiles/$1.inp`
+set radcorr_flag=`awk '/Radiative correction/ {print $1; exit}' infiles/$1.inp`
 if ( "$sf_flag" == "1" ) then
   set suffix="3HeFit"
 else
@@ -13,14 +14,22 @@ endif
 set mc_tag="${1}${suffix}"
 
 cd src
+if ( "$radcorr_flag" == "1" ) then
+  if ( ! -f "interp/Newfit_20260710_fullxquad_15angles.tar.gz" ) then
+    echo "ERROR: radiative correction is enabled, but the table archive is absent from src/interp"
+    exit 1
+  endif
+endif
 make clean
 make
+if ( $status != 0 ) exit $status
 ./mc_single_arm <<EOF |& tee "../runout/$1.out"
 $1
 EOF
 cd ../util/root_tree
 make clean
 make
+if ( $status != 0 ) exit $status
 ./make_root_tree << endofinput
 $mc_tag
 endofinput
