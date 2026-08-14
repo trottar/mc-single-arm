@@ -29,7 +29,7 @@ C----------------------------------------------------------------------
          WRITE(6,*) 'ERROR: invalid radcorr SF model =',IMOD0
          RETURN
       ENDIF
-      IF (DABS(EBEAM_GEV-RAD_EBEAM_GEV).GT.1.D-3) THEN
+      IF (ABS(EBEAM_GEV-RAD_EBEAM_GEV).GT.1.D-3) THEN
          WRITE(6,*) 'ERROR: 3He radcorr tables require Ebeam (GeV)=',
      >              RAD_EBEAM_GEV
          WRITE(6,*) '       requested Ebeam (GeV)=',EBEAM_GEV
@@ -92,7 +92,7 @@ C selected 15 tables without involving the event lookup routine.
             CLOSE(UNITNO)
             GOTO 900
          ENDIF
-         IF (DABS(COL(1)-RAD_EBEAM_MEV).GT.RAD_EBEAM_TOL_MEV) THEN
+         IF (ABS(COL(1)-RAD_EBEAM_MEV).GT.RAD_EBEAM_TOL_MEV) THEN
             WRITE(6,*) 'ERROR: unexpected table Ebeam (MeV)=',COL(1)
             WRITE(6,*) FILENAME
             CLOSE(UNITNO)
@@ -102,8 +102,8 @@ C selected 15 tables without involving the event lookup routine.
          VALID=.TRUE.
          IF (COL(5).LE.0.D0 .OR. COL(10).LE.0.D0) VALID=.FALSE.
          IF (COL(5).NE.COL(5) .OR. COL(10).NE.COL(10)) VALID=.FALSE.
-         IF (DABS(COL(5)).GT.1.D300 .OR.
-     >       DABS(COL(10)).GT.1.D300) VALID=.FALSE.
+         IF (ABS(COL(5)).GT.1.D300 .OR.
+     >       ABS(COL(10)).GT.1.D300) VALID=.FALSE.
          IF (VALID) THEN
             IF (SAW_INVALID) THEN
                WRITE(6,*) 'ERROR: non-contiguous finite radcorr grid:'
@@ -126,7 +126,7 @@ C selected 15 tables without involving the event lookup routine.
             ENDIF
             IF (NVALID.GT.1) THEN
                DNU=COL(2)-PREV_NU
-               IF (DABS(DNU-RAD_DNU_MEV).GT.RAD_DNU_TOL) THEN
+               IF (ABS(DNU-RAD_DNU_MEV).GT.RAD_DNU_TOL) THEN
                   WRITE(6,*) 'ERROR: nonuniform 3He radcorr nu grid:'
                   WRITE(6,*) FILENAME
                   WRITE(6,*) ' expected dnu (MeV)=',RAD_DNU_MEV
@@ -139,7 +139,7 @@ C selected 15 tables without involving the event lookup routine.
             RAD_RATIO(NVALID,IA)=COL(10)/COL(5)
             IF (RAD_RATIO(NVALID,IA).NE.RAD_RATIO(NVALID,IA) .OR.
      >          RAD_RATIO(NVALID,IA).LE.0.D0 .OR.
-     >          DABS(RAD_RATIO(NVALID,IA)).GT.1.D300) THEN
+     >          ABS(RAD_RATIO(NVALID,IA)).GT.1.D300) THEN
                WRITE(6,*) 'ERROR: invalid rad-weight ratio in:'
                WRITE(6,*) FILENAME
                CLOSE(UNITNO)
@@ -214,17 +214,17 @@ C----------------------------------------------------------------------
          CALL RADCORR_REPORT_DOMAIN(THETA_DEG,NU_GEV,IA1,IA2)
          RETURN
       ENDIF
-      IF (DABS(THETA_LOOKUP-RAD_ANGLE(1)).LE.ANG_TOL) THEN
+      IF (ABS(THETA_LOOKUP-RAD_ANGLE(1)).LE.ANG_TOL) THEN
          IA1=1
          IA2=1
          THETA_LOOKUP=RAD_ANGLE(1)
-      ELSE IF (DABS(THETA_LOOKUP-RAD_ANGLE(NRAD_ANG)).LE.ANG_TOL) THEN
+      ELSE IF (ABS(THETA_LOOKUP-RAD_ANGLE(NRAD_ANG)).LE.ANG_TOL) THEN
          IA1=NRAD_ANG
          IA2=NRAD_ANG
          THETA_LOOKUP=RAD_ANGLE(NRAD_ANG)
       ELSE
          DO IA=1,NRAD_ANG
-            IF (DABS(THETA_LOOKUP-RAD_ANGLE(IA)).LE.ANG_TOL) THEN
+            IF (ABS(THETA_LOOKUP-RAD_ANGLE(IA)).LE.ANG_TOL) THEN
                IA1=IA
                IA2=IA
                THETA_LOOKUP=RAD_ANGLE(IA)
@@ -267,7 +267,7 @@ C----------------------------------------------------------------------
       RAD_WEIGHT_FACTOR=R1+FRAC*(R2-R1)
       IF (RAD_WEIGHT_FACTOR.NE.RAD_WEIGHT_FACTOR .OR.
      >    RAD_WEIGHT_FACTOR.LE.0.D0 .OR.
-     >    DABS(RAD_WEIGHT_FACTOR).GT.1.D300) THEN
+     >    ABS(RAD_WEIGHT_FACTOR).GT.1.D300) THEN
          RAD_WEIGHT_FACTOR=1.D0
          RETURN
       ENDIF
@@ -299,12 +299,12 @@ C----------------------------------------------------------------------
       NU_LOOKUP=NU_TABLE
       IF (NU_LOOKUP.LT.RAD_NU(1,IA)-NU_TOL .OR.
      >    NU_LOOKUP.GT.RAD_NU(NN,IA)+NU_TOL) RETURN
-      IF (DABS(NU_LOOKUP-RAD_NU(1,IA)).LE.NU_TOL) THEN
+      IF (ABS(NU_LOOKUP-RAD_NU(1,IA)).LE.NU_TOL) THEN
          RVALUE=RAD_RATIO(1,IA)
          STAT=.TRUE.
          RETURN
       ENDIF
-      IF (DABS(NU_LOOKUP-RAD_NU(NN,IA)).LE.NU_TOL) THEN
+      IF (ABS(NU_LOOKUP-RAD_NU(NN,IA)).LE.NU_TOL) THEN
          RVALUE=RAD_RATIO(NN,IA)
          STAT=.TRUE.
          RETURN
@@ -314,12 +314,12 @@ C----------------------------------------------------------------------
       IF (J.LT.1 .OR. J.GE.NN) RETURN
       IF (NU_LOOKUP.LT.RAD_NU(J,IA)-NU_TOL .OR.
      >    NU_LOOKUP.GT.RAD_NU(J+1,IA)+NU_TOL) RETURN
-      IF (DABS(NU_LOOKUP-RAD_NU(J,IA)).LE.NU_TOL) THEN
+      IF (ABS(NU_LOOKUP-RAD_NU(J,IA)).LE.NU_TOL) THEN
          RVALUE=RAD_RATIO(J,IA)
          STAT=.TRUE.
          RETURN
       ENDIF
-      IF (DABS(NU_LOOKUP-RAD_NU(J+1,IA)).LE.NU_TOL) THEN
+      IF (ABS(NU_LOOKUP-RAD_NU(J+1,IA)).LE.NU_TOL) THEN
          RVALUE=RAD_RATIO(J+1,IA)
          STAT=.TRUE.
          RETURN
