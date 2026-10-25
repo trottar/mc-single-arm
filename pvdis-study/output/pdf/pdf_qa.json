@@ -1,0 +1,11 @@
+{
+  "schema_version": "pvdis_pdf_qa/v1",
+  "pdf_sha256": "303376e06015dbd62c8e7b7cabaeb843a7cfcc6cd4335e0063fa338bb1b4a497",
+  "pages": 28,
+  "indexed_runs_present": 2,
+  "nonblank_text_pages": true,
+  "fresh_resonance_studies_present": 1,
+  "text_outside_page_bounds": [],
+  "rendered_pages": 28,
+  "visual_review": "New primary-result pages 1-6 and final bibliography inspected at full size; plots, tables and text fit without clipping. Historical report layout retained."
+}

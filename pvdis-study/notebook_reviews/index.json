@@ -1,0 +1,11 @@
+{
+  "schema_version": "pvdis_notebook_index/v1",
+  "reviews": [
+    {
+      "review_id": "notebook_afc987aefb60_audit_3f44c035",
+      "path": "notebook_reviews/notebook_afc987aefb60_audit_3f44c035",
+      "source_sha256": "afc987aefb602b4310b0b8e71aa3274ddb634ac37d522d912a736117a79e8193",
+      "manifest_sha256": "ab1e05eb6031def48026f1c422649f2299dff5e4fc6b2859f8b6eab569a8f94a"
+    }
+  ]
+}

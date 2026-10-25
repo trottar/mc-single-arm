@@ -1,0 +1,5 @@
+PASS: fresh-process repeat is byte-identical
+ERROR STOP outside benchmark domain
+PASS: invalid kinematics rejected
+ERROR STOP required smearing table missing
+PASS: missing tables rejected before model evaluation

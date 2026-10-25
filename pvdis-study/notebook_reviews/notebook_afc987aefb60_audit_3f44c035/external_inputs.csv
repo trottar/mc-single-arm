@@ -1,0 +1,35 @@
+file,role,status
+hallc_bin_hms101.dat,HMS projection,not_supplied
+hallc_bin_hms102.dat,HMS projection,not_supplied
+hallc_bin_hms103.dat,HMS projection,not_supplied
+hallc_bin_hms104.dat,HMS projection,not_supplied
+hallc_bin_hms105.dat,HMS projection,not_supplied
+hallc_bin_hms106.dat,HMS projection,not_supplied
+hallc_bin_hms107.dat,HMS projection,not_supplied
+hallc_bin_hms108.dat,HMS projection,not_supplied
+hallc_bin_hms109.dat,HMS projection,not_supplied
+hallc_bin_hms110.dat,HMS projection,not_supplied
+hallc_bin_hms111.dat,HMS projection,not_supplied
+hallc_bin_hms112.dat,HMS projection,not_supplied
+hallc_bin_hms113.dat,HMS projection,not_supplied
+hallc_bin_hms114.dat,HMS projection,not_supplied
+hallc_bin_shms101.dat,SHMS projection,not_supplied
+hallc_bin_shms102.dat,SHMS projection,not_supplied
+hallc_bin_shms103.dat,SHMS projection,not_supplied
+hallc_bin_shms104.dat,SHMS projection,not_supplied
+hallc_bin_shms105.dat,SHMS projection,not_supplied
+hallc_bin_shms106.dat,SHMS projection,not_supplied
+hallc_bin_shms107.dat,SHMS projection,not_supplied
+hallc_bin_shms108.dat,SHMS projection,not_supplied
+hallc_bin_shms109.dat,SHMS projection,not_supplied
+hallc_bin_shms110.dat,SHMS projection,not_supplied
+hallc_bin_shms111.dat,SHMS projection,not_supplied
+hallc_bin_shms112.dat,SHMS projection,not_supplied
+hallc_bin_shms113.dat,SHMS projection,not_supplied
+hallc_bin_shms114.dat,SHMS projection,not_supplied
+halla_hrsl1.dat,HRS rate check,not_supplied
+halla_hrsl2.dat,HRS rate check,not_supplied
+halla_hrsr1.dat,HRS rate check,not_supplied
+halla_hrsr2.dat,HRS rate check,not_supplied
+solid11.dat,SoLID projection,not_supplied
+pvdis_11gev_CJ15nlo.csv,SoLID projection,not_supplied

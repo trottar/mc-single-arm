@@ -1,0 +1,18 @@
+{
+  "schema_version": "pvdis_resonance_columns/v1",
+  "units": {
+    "E_GeV": "GeV",
+    "Eprime_GeV": "GeV",
+    "W_GeV": "GeV",
+    "Q2_GeV2": "GeV^2",
+    "theta_deg": "degree",
+    "A_*_ppm": "ppm",
+    "F1*": "dimensionless per nucleus (p+n reference or deuteron)",
+    "R_*": "dimensionless"
+  },
+  "scenarios": {
+    "axial_scale": "multiplier of assumed F3gammaZ/F1gamma=18/5",
+    "RgammaZ_over_Rgamma": "multiplier of weak longitudinal ratio; transverse vector ratio unchanged"
+  },
+  "reference_kinematics": "Angle/W points, not spectrometer acceptance-integrated settings or an optimized schedule."
+}

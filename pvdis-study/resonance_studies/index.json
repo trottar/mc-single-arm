@@ -1,0 +1,10 @@
+{
+  "schema_version": "pvdis_resonance_index/v1",
+  "studies": [
+    {
+      "study_id": "20261025T193128315988Z",
+      "path": "resonance_studies/20261025T193128315988Z",
+      "manifest_sha256": "f510817547626dc097c10cfed16330ff94b02a01d457ee02d67d8efefe9c1c9f"
+    }
+  ]
+}

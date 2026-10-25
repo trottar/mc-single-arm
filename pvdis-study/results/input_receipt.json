@@ -1,0 +1,63 @@
+{
+  "table_source": {
+    "repository": "trottar/simc_gfortran",
+    "commit": "641b8c07182fd045fd8a5c007cdc1b71a418f3ce",
+    "truncated": false,
+    "tables": [
+      {
+        "path": "f1f2tables/f11-onshell-cdbonn.dat",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "427adbd1cf051e432a6e994021692d1f8847815a",
+        "size": 440559,
+        "url": "https://api.github.com/repos/trottar/simc_gfortran/git/blobs/427adbd1cf051e432a6e994021692d1f8847815a"
+      },
+      {
+        "path": "f1f2tables/f12-onshell-cdbonn.dat",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "57d1e436349a0d4cd5b8b74b90426df54eb0a3fe",
+        "size": 440645,
+        "url": "https://api.github.com/repos/trottar/simc_gfortran/git/blobs/57d1e436349a0d4cd5b8b74b90426df54eb0a3fe"
+      },
+      {
+        "path": "f1f2tables/f22-onshell-cdbonn.dat",
+        "mode": "100644",
+        "type": "blob",
+        "sha": "7f8e4059c6f4da22b4b0193fae05acc584c367fb",
+        "size": 440639,
+        "url": "https://api.github.com/repos/trottar/simc_gfortran/git/blobs/7f8e4059c6f4da22b4b0193fae05acc584c367fb"
+      }
+    ]
+  },
+  "tables": {
+    "f11-onshell-cdbonn.dat": {
+      "git_blob_sha1": "427adbd1cf051e432a6e994021692d1f8847815a",
+      "sha256": "da9681af403662b06df641d48c18fb3903d11d5f257e28d7f486d7d10567c9e9",
+      "bytes": 440559
+    },
+    "f12-onshell-cdbonn.dat": {
+      "git_blob_sha1": "57d1e436349a0d4cd5b8b74b90426df54eb0a3fe",
+      "sha256": "7fa11ccbf2beab847f26bb3ba1c2ee7116e50646b9ee12746f200d7ad1ac42e0",
+      "bytes": 440645
+    },
+    "f22-onshell-cdbonn.dat": {
+      "git_blob_sha1": "7f8e4059c6f4da22b4b0193fae05acc584c367fb",
+      "sha256": "6720800a1c3216e8938987f3e064e0c28d0101fdb81c1fc457c00580dab47f46",
+      "bytes": 440639
+    }
+  },
+  "model_source": {
+    "repository": "trottar/mc-single-arm",
+    "commit": "2a27ddb7442ab2148e47fe4f3e998cf1be0a9fa8",
+    "git_blob_sha1": "02a1cea8a4850352d4c1f924de3009db2ede7aef",
+    "local_sha256": "d8079ffccf752405ede4e16b5af5eb2da0b0fc4eb8b61121c78a3ea45d6a8b70",
+    "line_ending_only_difference": false
+  },
+  "point_count": 808,
+  "data_source": {
+    "url": "https://arxiv.org/pdf/1304.7741v2",
+    "location": "Table I, physics asymmetry results; manually transcribed and column checked",
+    "sha256": "961de5b038c71939d1fbeca5b46cda4f1f229536877bb0ca810d22d3a22e9651"
+  }
+}

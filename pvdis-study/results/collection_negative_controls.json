@@ -1,0 +1,21 @@
+{
+  "schema_version": "pvdis_collection_tests/v1",
+  "tests": [
+    {
+      "test": "stale_csv",
+      "status": "PASS",
+      "rejection": "stale generation: results/resonance_benchmark.csv"
+    },
+    {
+      "test": "resealed_wrong_number",
+      "status": "PASS",
+      "rejection": "CSV disagrees with raw-model reconstruction: 1 A_free_ppm"
+    },
+    {
+      "test": "changed_source",
+      "status": "PASS",
+      "rejection": "stale generation: src/analyze.py"
+    }
+  ],
+  "original_snapshots_verified_after_tests": true
+}

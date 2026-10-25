@@ -1,0 +1,6 @@
+setting,data_ppm,free_ppm,closure_ppm,residual_over_total
+I,-68.97,-76.836,-76.857,-0.868
+II,-74.12,-67.039,-67.018,0.956
+III,-61.80,-61.444,-61.463,0.061
+IV,-119.56,-120.131,-120.195,-0.034
+PASS: algebra, direct response, limits, source data, and kinematic checks

@@ -1,0 +1,65 @@
+{
+  "schema_version": "pvdis_notebook_manifest/v1",
+  "files": {
+    "audit_notebook.py": {
+      "sha256": "3f44c035dbc934c0e056cf19959153b0430052acbb450697eb2ca20186e0f423",
+      "bytes": 18670
+    },
+    "cells.txt": {
+      "sha256": "8726c904927c0e2593c40194c124671518ed00bf40d106ea0311451c976f5cdc",
+      "bytes": 61664
+    },
+    "cell_inventory.json": {
+      "sha256": "0b9e842ed439514f5dd9ca3299de3a900a307045191393fc309631ca464a2b09",
+      "bytes": 11801
+    },
+    "ellipse_convention.csv": {
+      "sha256": "0244a16defd00e7163f7595bd0c6863abe43940d833e4781c593c1ea6e44244a",
+      "bytes": 239
+    },
+    "ellipse_convention.png": {
+      "sha256": "f6d8ed64ca2c9db40917f1fda5340456a1ab2d4e4abb8416502bdf016baccaba",
+      "bytes": 101789
+    },
+    "external_inputs.csv": {
+      "sha256": "c4d1bf8c5e0196c621bd9c51a937ae5e8f9599d9027635147f93f0409310b446",
+      "bytes": 1724
+    },
+    "findings.json": {
+      "sha256": "fba823a94cf088b9870ca5f1ed10715b606cbe1c2793312b4dcf851bd50dc40d",
+      "bytes": 6842
+    },
+    "inline_halla_DIS.csv": {
+      "sha256": "d2b619b88a772da4bab6b7d923f02a78097a8845918d8cb3eb647b2a7379cc0f",
+      "bytes": 177
+    },
+    "numeric_diagnostics.json": {
+      "sha256": "5f304222c75ab3c395b99e8b1525698fdd0dc3540a31e15c9150a4c655b849f2",
+      "bytes": 4420
+    },
+    "parser_probe_input.dat": {
+      "sha256": "2f843821e1b60bd65dcacf690ef9d607e596c222ddeab21de425683106ab408e",
+      "bytes": 67
+    },
+    "review.json": {
+      "sha256": "dd5f414b5596dc54c895076e51961a77c2fda3c1dad57b3c6013bdebff9be14f",
+      "bytes": 1366
+    },
+    "REVIEW.md": {
+      "sha256": "8142972664f585caf9421999b5e4b2c88e06e8e8790984dfbea242bc67e60fc1",
+      "bytes": 5212
+    },
+    "selected_function_stdout.log": {
+      "sha256": "9c85d2bbe48cf7da1f854b82827b3c0569061a52f5191052056835871a90bc00",
+      "bytes": 1899
+    },
+    "source.ipynb": {
+      "sha256": "afc987aefb602b4310b0b8e71aa3274ddb634ac37d522d912a736117a79e8193",
+      "bytes": 637546
+    },
+    "time_scaling_probes.csv": {
+      "sha256": "68b7f4061911664a48cde09812f598a3add1e5aba0c0483380b8b4584fa3ff69",
+      "bytes": 254
+    }
+  }
+}

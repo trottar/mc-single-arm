@@ -1,0 +1,69 @@
+
+Inline Hall A DIS implementation reproduction
+Statistical uncertainty scale: 1
+Systematic uncertainty scale:  1
+
+X = -0.777397 +/- 0.088731 (1 sigma)
+Y = -0.030059 +/- 0.174050 (1 sigma)
+Parameter correlation = -0.94429
+
+Major-axis angle = 116.225 degrees from +X
+68.3% ellipse: semi-major = 0.193591, semi-minor = 0.026255
+
+Fixed-beta implementation cross-check
+Statistical uncertainty scale: 1
+Systematic uncertainty scale:  1
+
+X = -0.777397 +/- 0.088731 (1 sigma)
+Y = -0.0300585 +/- 0.17405 (1 sigma)
+beta_HT = 0 (fixed)
+beta_CSV = 0 (fixed)
+
+Correlation matrix for free parameters:
+Parameters: X, Y
+[[ 1.      -0.94429]
+ [-0.94429  1.     ]]
+
+X-Y correlation = -0.94429
+chi2 = 0.00000
+ndof = 0
+Major-axis angle = 116.225 degrees from +X
+
+Ellipse geometry:
+68.3% ellipse (Delta chi2 = 1.0000): semi-major = 0.193591, semi-minor = 0.0262552
+    Full major axis = 0.387181, full minor axis = 0.0525103
+
+Confidence-level override probe
+Statistical uncertainty scale: 1
+Systematic uncertainty scale:  1
+
+X = -0.777397 +/- 0.088731 (1 sigma)
+Y = -0.030059 +/- 0.174050 (1 sigma)
+Parameter correlation = -0.94429
+
+Major-axis angle = 116.225 degrees from +X
+68.3% ellipse: semi-major = 0.193591, semi-minor = 0.026255
+95.0% ellipse: semi-major = 0.193591, semi-minor = 0.026255
+
+Fit results
+Statistical uncertainty scale: 1
+Systematic uncertainty scale:  1
+
+X = -0.763513 +/- 0.0883838 (1 sigma)
+Y = -0.0557764 +/- 0.173443 (1 sigma)
+beta_HT = 0 (fixed)
+beta_CSV = 0 (fixed)
+
+Correlation matrix for free parameters:
+Parameters: X, Y
+[[ 1.      -0.94389]
+ [-0.94389  1.     ]]
+
+X-Y correlation = -0.94389
+chi2 = 3.13446
+ndof = 1
+Major-axis angle = 116.209 degrees from +X
+
+Ellipse geometry:
+68.3% ellipse (Delta chi2 = 1.0000): semi-major = 0.192887, semi-minor = 0.0262479
+    Full major axis = 0.385773, full minor axis = 0.0524958

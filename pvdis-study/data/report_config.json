@@ -1,0 +1,26 @@
+{
+  "schema_version": "pvdis_report_config/v1",
+  "title": "PVDIS PAC Study",
+  "subtitle": "Cumulative data, diagnostics, and reproducibility record",
+  "study_date": "2026-10-25",
+  "total_PAC_days": 30,
+  "primary_goal": "Inelastic/resonance A_PV for preliminary MOLLER workshop results by Monday afternoon October 26; more complete results Tuesday October 27.",
+  "priority_order": ["gamma-Z construction and response assumptions", "published resonance-data benchmark", "fresh 11 GeV A_PV curves and representative kinematics", "statistical reach after rate validation", "broader PAC coupling ellipses and setting optimization"],
+  "repository": "https://github.com/trottar/mc-single-arm",
+  "branch": "pvdis",
+  "milestones": ["Preliminary MOLLER workshop material: October 26, 2026", "More complete assessment: October 27, 2026"],
+  "pending": [
+    {"input": "Colab notebook and fit inputs", "status": "notebook_reviewed_external_tables_missing", "impact": "HT/CSV templates and fit implementation are reviewed; 34 referenced data files and clean-run fixes are still needed."},
+    {"input": "Original READPDF3 and MMHT grid", "status": "not_supplied", "impact": "Inherited PDF calculation cannot be reproduced as supplied."},
+    {"input": "Original rate files and helper routines", "status": "not_supplied", "impact": "No validated statistical projection or setting optimization."},
+    {"input": "Detector and target acceptance validation", "status": "not_established_by_this_run", "impact": "No detector-folded or LD2 hardware prediction."}
+  ],
+  "references": [
+    {"label": "Wang et al., resonance measurements", "url": "https://arxiv.org/pdf/1304.7741v2", "use": "Table I measurements, uncertainties, and published CJ reference values; Eq. (1) sign/convention anchor."},
+    {"label": "Hobbs and Melnitchouk, finite-Q2 kinematics", "url": "https://arxiv.org/pdf/0801.4791v4", "use": "Eq. (13), with -x*y*M/E in the denominator. Coupling conventions are translated explicitly."},
+    {"label": "Pinned F1F2IN21 model", "url": "https://github.com/trottar/mc-single-arm/blob/2a27ddb7442ab2148e47fe4f3e998cf1be0a9fa8/src/F1F2IN21_v1.0.f", "use": "Unmodified electromagnetic model source."},
+    {"label": "Pinned external CD-Bonn tables", "url": "https://github.com/trottar/simc_gfortran/tree/641b8c07182fd045fd8a5c007cdc1b71a418f3ce/f1f2tables", "use": "Three exact Git blob identities independently checked against retained bytes."},
+    {"label": "Gorchtein, Horowitz and Ramsey-Musolf, weak isospin rotation", "url": "https://arxiv.org/pdf/1102.3910", "use": "Appendix A after Eq. (A9): pure isospin-3/2 component ratio. Not used as a full inclusive deuteron prediction."},
+    {"label": "Carlson and Rislow, resonance weak-response models", "url": "https://arxiv.org/pdf/1201.3323v2", "use": "Resonance/background rotations and helicity-amplitude limitations; context for the unresolved model-construction gate."}
+  ]
+}

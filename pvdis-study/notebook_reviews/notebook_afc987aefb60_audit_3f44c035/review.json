@@ -1,0 +1,37 @@
+{
+  "schema_version": "pvdis_notebook_review/v1",
+  "review_id": "notebook_afc987aefb60_audit_3f44c035",
+  "captured_utc": "2026-10-25T18:22:16.897505+00:00",
+  "source_sha256": "afc987aefb602b4310b0b8e71aa3274ddb634ac37d522d912a736117a79e8193",
+  "source_bytes": 637546,
+  "source_original_path": "C:\\Users\\trott\\Downloads\\Copy of plot_c1c2.ipynb",
+  "harness_sha256": "3f44c035dbc934c0e056cf19959153b0430052acbb450697eb2ca20186e0f423",
+  "cell_count": 39,
+  "external_file_count": 34,
+  "notebook_executed_top_to_bottom": false,
+  "executed_cells": "Only AST-selected reviewed function definitions from 6,14,15 and data_pvdis6 assignment from 5.",
+  "drive_mounted": false,
+  "external_projection_data_loaded": false,
+  "cached_outputs_used_as_fresh_results": false,
+  "templates": {
+    "formula": "A=(c1*X+c2*Y)*(1+beta_HT/((1-x)^3*Q2)+beta_CSV*x^2)",
+    "beta_HT_unit": "GeV^2",
+    "beta_CSV_unit": "dimensionless",
+    "prior_or_bounds": "none in fit function",
+    "apply_mask": "second coupling coefficient != 0"
+  },
+  "missing_definitions": [
+    "data_sets_hms1",
+    "data_sets_shms1",
+    "data_sets_hms2",
+    "data_sets_shms2",
+    "result_11gev_hallc1",
+    "result_11gev_hallc1_all"
+  ],
+  "packages": {
+    "numpy": "2.3.0",
+    "scipy": "1.16.1",
+    "matplotlib": "3.10.3",
+    "Pillow": "11.2.1"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": "pvdis_column_descriptions/v1",
+  "descriptions": {
+    "A_phys_ppm": "Published physics asymmetry after the experiment's corrections; not the raw helicity asymmetry.",
+    "stat_ppm": "Published one-standard-deviation statistical error on A_phys.",
+    "syst_ppm": "Published systematic error on A_phys; correlation matrix is unavailable here.",
+    "total_reported_ppm": "Published total experimental error; its rounded quadrature is checked against stat and syst.",
+    "CJ_published_ppm": "CJ-based prediction copied from the paper for comparison; not recomputed by this study.",
+    "x": "Bjorken x = Q2/[W2-M2+Q2], using the declared nucleon mass.",
+    "y": "Fractional electron energy loss: nu/E, with nu=(W2-M2+Q2)/(2M).",
+    "F1p": "Computed free-proton transverse electromagnetic structure function.",
+    "F1n": "Computed free-neutron transverse electromagnetic structure function.",
+    "F1_free_sum": "F1p+F1n; electromagnetic reference for the free p+n construction.",
+    "F1d_smeared": "Per-deuteron F1 from the CD-Bonn on-shell electromagnetic smearing model; QE excluded.",
+    "F2_free_sum": "Computed electromagnetic F2p+F2n.",
+    "F2d_smeared": "Per-deuteron electromagnetic F2 after the specified smearing; QE excluded.",
+    "R_free": "Electromagnetic longitudinal/transverse ratio from the free p+n F1 and F2.",
+    "R_smeared": "Electromagnetic longitudinal/transverse ratio from the smeared deuteron F1 and F2.",
+    "Y3_free": "Finite-Q2 axial kinematic factor using R_free.",
+    "Y3_closure": "Finite-Q2 axial kinematic factor using R_smeared in the common-response ansatz.",
+    "A_free_ppm": "Calculated free-p+n asymmetry under charge symmetry, light valence, and RgammaZ=Rgamma.",
+    "A_closure_ppm": "Calculated asymmetry imposing a common transverse weak/electromagnetic smeared response.",
+    "A_closure_SW2_0232_ppm": "Closure asymmetry with sin2(thetaW)=0.232; an input convention variation, not a fitted value.",
+    "A_Rgz_08R_ppm": "Closure asymmetry with RgammaZ=0.8*Rgamma; illustrative scenario, not an error endpoint.",
+    "A_Rgz_12R_ppm": "Closure asymmetry with RgammaZ=1.2*Rgamma; illustrative scenario, not an error endpoint.",
+    "coeff_C1_closure_ppm": "Signed coefficient multiplying dimensionless 2C1u-C1d in the closure asymmetry.",
+    "coeff_C2_closure_ppm": "Signed coefficient multiplying dimensionless 2C2u-C2d in the closure asymmetry.",
+    "residual_closure_ppm": "Closure-model asymmetry minus the published physics asymmetry."
+  }
+}

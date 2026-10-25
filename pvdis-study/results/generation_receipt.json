@@ -1,0 +1,28 @@
+{
+  "schema_version": "pvdis_generation/v1",
+  "mode": "full_fortran_run",
+  "captured_utc": "2026-10-25T18:10:24.681615+00:00",
+  "inputs": {
+    "vendor/F1F2IN21_v1.0.f": "d8079ffccf752405ede4e16b5af5eb2da0b0fc4eb8b61121c78a3ea45d6a8b70",
+    "src/sf_probe.f90": "dd4b511c0b0c4d04c0eba18e5631979840eab21c618f2901adb3e4f457110725",
+    "tools/build_probe.sh": "1f05689b5b0fb021d66b3240ca7a34a86842309b9d3d761dfebc6236ff0cd8a4",
+    "src/analyze.py": "01177783a713d670160cc49a4835cc71787ad29a0136cdb698bfe5aa280f3696",
+    "src/plot_results.py": "92290fd77923b5174ef3741efd6f903e00f8e0b5e8fa0058c7db5145086dbfdd",
+    "data/resonance_table_I.csv": "961de5b038c71939d1fbeca5b46cda4f1f229536877bb0ca810d22d3a22e9651",
+    "build/f1f2tables/f11-onshell-cdbonn.dat": "da9681af403662b06df641d48c18fb3903d11d5f257e28d7f486d7d10567c9e9",
+    "build/f1f2tables/f12-onshell-cdbonn.dat": "7fa11ccbf2beab847f26bb3ba1c2ee7116e50646b9ee12746f200d7ad1ac42e0",
+    "build/f1f2tables/f22-onshell-cdbonn.dat": "6720800a1c3216e8938987f3e064e0c28d0101fdb81c1fc457c00580dab47f46",
+    "build/points.dat": "b299ae2ae6276bb953e48b223abe4420bed56a3c86132b0b99be84da4d7a5cac",
+    "build/sf_values.dat": "f9bde1c721ba8491a32611e06cefd760c6e7836195216b9dc586a81efcd3e4a3"
+  },
+  "outputs": {
+    "results/resonance_benchmark.csv": "fe7c86280f3e9e894e17a3d47e4b679ffe2400e22fbf9fe83eca155c1ba1eb15",
+    "results/resonance_W_scan.csv": "ff620af6e0d70a87eee12142fe844520874589ee180f011f20407e585d641eb2",
+    "results/resonance_benchmark.png": "967a96ac1d760e542fd8cfdbe44e0542b55b9f717ff4cf17eb609bc610f8179a",
+    "results/resonance_W_scan.png": "0c5e70ce2b930d1d010495d2a90ccdb7a71a90655a3cd19d65a6f8dd7d017e26",
+    "results/resonance_benchmark.svg": "18166134b18cfa16d519f225ae8bea666ce80b4f3d3893240fc6ffd08a1d7ac1",
+    "results/resonance_W_scan.svg": "84698cf10bd64c3ad88e702ddfe1ee682a472efc65ba15714eda3fcc685c2d04",
+    "results/benchmark_receipt.json": "64e3e11c13dc55a56c3e8dc318eee43e4459af4a4f671f71914edddc4deb108c",
+    "results/input_receipt.json": "db32a7cf365ed0452d7e849d9a53b670161e468315ffccd308295d559274fdea"
+  }
+}
