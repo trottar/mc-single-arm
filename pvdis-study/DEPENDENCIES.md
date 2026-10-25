@@ -1,5 +1,7 @@
 # Dependency audit and remaining gates
 
+Latest resonance-specific input audit: `WEAK_RESPONSE_ASSESSMENT.md`. Vector modeling has priority with F3 fixed. The source now has an additive instrumented-copy fit-term diagnostic, not a physical amplitude decomposition. Missing signed p/n helicity/longitudinal products, background phases and current-revision EM validation prevent promotion to a full improved prediction. Candidate axial frameworks are identified but not implemented; no rates or statistical projections are available.
+
 Audit date: 2026-10-25. Public mc-single-arm baseline: `2a27ddb7442ab2148e47fe4f3e998cf1be0a9fa8` (branch `pvdis` initially points here).
 
 | Input/capability | Current evidence | Status / implication |

@@ -1,5 +1,9 @@
 # PVDIS study: inelastic/resonance A_PV first
 
+**Sharing policy:** growing data, diagnostics, snapshots, reports and ZIPs remain local. Share a verified ZIP with chat on request; do not push these artifacts to GitHub. Existing code and project memory may remain. See SHARING_POLICY.md. Build a sharing archive without rerunning science or editing the PDF using `python tools/build_study.py --mode bundle`. A code-only checkout requires the separately supplied bundle for its local study inputs and retained evidence.
+
+Latest additive investigation: [WEAK_RESPONSE_ASSESSMENT.md](WEAK_RESPONSE_ASSESSMENT.md) documents the vector-first input gate, 900 matched component calculations, a conditional Delta-only diagnostic with the axial prescription fixed, the repeated four Hall A mean comparisons and 11 GeV cross-section/validity warnings. The original reference remains preserved. No complete improved weak-response model is claimed. Reconstruct the new CSVs with `python tools/verify_component_study.py --recompute`; execute a fresh study with `python tools/run_component_study.py`.
+
 **Priority correction, October 25, 2026:** the urgent artifact is inelastic/resonance A_PV for the MOLLER workshop, with preliminary results Monday afternoon October 26 and more complete work Tuesday October 27. The broader PAC coupling-ellipse optimization is secondary. Reporting infrastructure, notebook auditing, and the first four-point comparison do not complete the urgent physics goal. See `CURRENT.md` and the active order in `ROADMAP.md`.
 
 The cumulative report now leads with a fresh 11 GeV calculation over eight reference angles and W=1.10-2.20 GeV. Its sealed `resonance_studies/` evidence contains 896 new scan points, four benchmark means, 10,800 controlled weak-response scenarios and 40 representative kinematics. These are conditional light-valence reference curves, not a validated weak resonance model. Rates and statistical reach remain explicitly unavailable.

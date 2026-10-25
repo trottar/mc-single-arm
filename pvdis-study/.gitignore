@@ -1,0 +1,16 @@
+# Growing study evidence stays local. Share verified ZIP bundles on request.
+/build/
+/data/
+/results/
+/runs/
+/notebook_reviews/
+/resonance_studies/
+/component_studies/
+/output/
+/PUBLICATION.json
+__pycache__/
+*.pyc
+*.zip
+*.pdf
+*.png
+*.svg
